@@ -1,14 +1,28 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import { SITE_DESCRIPTION, POSTS_PER_PAGE } from "../config";
+import Layout from "../../layouts/Layout.astro";
+import { SITE_DESCRIPTION, POSTS_PER_PAGE } from "../../config";
 import { getCollection } from "astro:content";
 
-const posts = await getCollection("posts");
-posts.sort((a, b) => b.data.pubDatetime.getTime() - a.data.pubDatetime.getTime());
+export async function getStaticPaths() {
+  const posts = await getCollection("posts");
+  posts.sort((a, b) => b.data.pubDatetime.getTime() - a.data.pubDatetime.getTime());
+  const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
+  return Array.from({ length: totalPages - 1 }, (_, i) => ({
+    params: { page: String(i + 2) },
+    props: { page: i + 2, totalPages, posts, allTags: [...new Set(posts.flatMap((p) => p.data.tags ?? []))].sort() },
+  }));
+}
 
-const allTags = [...new Set(posts.flatMap((p) => p.data.tags ?? []))].sort();
-const pagePosts = posts.slice(0, POSTS_PER_PAGE);
-const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
+type Props = {
+  page: number;
+  totalPages: number;
+  posts: any[];
+  allTags: string[];
+};
+
+const { page, totalPages, posts: allPosts, allTags } = Astro.props;
+const start = (page - 1) * POSTS_PER_PAGE;
+const pagePosts = allPosts.slice(start, start + POSTS_PER_PAGE);
 ---
 
 <Layout>
@@ -42,13 +56,9 @@ const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
   </section>
 
   <nav class="pagination">
-    {totalPages > 1 && (
-      <>
-        <span class="page-disabled">上一页</span>
-        <span class="page-info">1/{totalPages}</span>
-        <a href="/page/2/">下一页</a>
-      </>
-    )}
+    {page > 2 ? <a href={`/page/${page - 1}/`}>上一页</a> : <a href="/">上一页</a>}
+    <span class="page-info">{page}/{totalPages}</span>
+    {page < totalPages ? <a href={`/page/${page + 1}/`}>下一页</a> : <span class="page-disabled">下一页</span>}
   </nav>
 </Layout>
 
@@ -192,5 +202,10 @@ const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
   .page-disabled {
     color: var(--border);
     cursor: default;
+  }
+
+  .page-info {
+    font-size: 0.85rem;
+    color: var(--muted);
   }
 </style>

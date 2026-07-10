@@ -4,13 +4,14 @@ import { getCollection } from "astro:content";
 
 export async function getStaticPaths() {
   const posts = await getCollection("posts");
-  return posts.map((post) => ({
+  posts.sort((a, b) => b.data.pubDatetime.getTime() - a.data.pubDatetime.getTime());
+  return posts.map((post, i) => ({
     params: { slug: post.slug },
-    props: { post },
+    props: { post, prevPost: posts[i + 1] ?? null, nextPost: posts[i - 1] ?? null },
   }));
 }
 
-const { post } = Astro.props;
+const { post, prevPost, nextPost } = Astro.props;
 const { Content } = await post.render();
 ---
 
@@ -36,6 +37,19 @@ const { Content } = await post.render();
     </header>
     <Content />
   </article>
+
+  <nav class="post-nav">
+    {prevPost && (
+      <a href={`/posts/${prevPost.slug}/`} class="post-nav-prev">
+        ← {prevPost.data.title}
+      </a>
+    )}
+    {nextPost && (
+      <a href={`/posts/${nextPost.slug}/`} class="post-nav-next">
+        {nextPost.data.title} →
+      </a>
+    )}
+  </nav>
 </Layout>
 
 <script>
@@ -199,5 +213,32 @@ const { Content } = await post.render();
   .code-fold-btn:hover {
     color: var(--fg);
     background: var(--muted);
+  }
+
+  .post-nav {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    gap: 1rem;
+  }
+
+  .post-nav a {
+    text-decoration: none;
+    font-size: 0.9rem;
+    color: var(--muted);
+    max-width: 45%;
+    transition: color 0.15s;
+    line-height: 1.4;
+  }
+
+  .post-nav a:hover {
+    color: var(--fg);
+  }
+
+  .post-nav-next {
+    text-align: right;
+    margin-left: auto;
   }
 </style>
