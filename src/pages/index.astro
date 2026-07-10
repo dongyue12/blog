@@ -66,10 +66,10 @@ const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
     const tag = btn.dataset.tag;
     for (const article of articles) {
       if (!tag) {
-        article.hidden = false;
+        article.classList.remove("filter-hidden");
       } else {
         const tags = article.dataset.tags?.split(",") ?? [];
-        article.hidden = !tags.includes(tag);
+        article.classList.toggle("filter-hidden", !tags.includes(tag));
       }
     }
   });
@@ -87,6 +87,10 @@ const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
   .posts {
     display: flex;
     flex-direction: column;
+  }
+
+  .filter-hidden {
+    display: none !important;
   }
 
   .posts article {

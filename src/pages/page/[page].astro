@@ -76,10 +76,10 @@ const pagePosts = allPosts.slice(start, start + POSTS_PER_PAGE);
     const tag = btn.dataset.tag;
     for (const article of articles) {
       if (!tag) {
-        article.hidden = false;
+        article.classList.remove("filter-hidden");
       } else {
         const tags = article.dataset.tags?.split(",") ?? [];
-        article.hidden = !tags.includes(tag);
+        article.classList.toggle("filter-hidden", !tags.includes(tag));
       }
     }
   });
@@ -109,6 +109,10 @@ const pagePosts = allPosts.slice(start, start + POSTS_PER_PAGE);
 
   .posts article:first-child {
     border-top: 1px solid var(--border);
+  }
+
+  .filter-hidden {
+    display: none !important;
   }
 
   .posts article time {
