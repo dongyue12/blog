@@ -46,7 +46,7 @@ const highlighted = highlighter.codeToHtml(code, {
     </div>
     {friendsData.applyEnabled && (
       <p class="apply-info">
-        博客友链持续开放，欢迎交换友链！请在 <a href={`https://github.com/${friendsData.repo}/issues`} target="_blank" rel="noopener">GitHub Issues</a> 中按格式提交。
+        博客友链持续开放，欢迎交换友链！请在下方评论区按格式提交。
       </p>
     )}
   </section>
@@ -62,7 +62,39 @@ const highlighted = highlighter.codeToHtml(code, {
       </article>
     ))}
   </section>
+
+  <div class="giscus"></div>
 </Layout>
+
+<script>
+  const giscusTheme = () => document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+
+  const giscusScript = document.createElement("script");
+  giscusScript.src = "https://giscus.app/client.js";
+  giscusScript.setAttribute("data-repo", "dongyue12/giscus");
+  giscusScript.setAttribute("data-repo-id", "R_kgDOSakHjA");
+  giscusScript.setAttribute("data-category", "Announcements");
+  giscusScript.setAttribute("data-category-id", "DIC_kwDOSakHjM4C8zJM");
+  giscusScript.setAttribute("data-mapping", "pathname");
+  giscusScript.setAttribute("data-strict", "0");
+  giscusScript.setAttribute("data-reactions-enabled", "1");
+  giscusScript.setAttribute("data-emit-metadata", "0");
+  giscusScript.setAttribute("data-input-position", "bottom");
+  giscusScript.setAttribute("data-theme", giscusTheme());
+  giscusScript.setAttribute("data-lang", "zh-CN");
+  giscusScript.setAttribute("crossorigin", "anonymous");
+  giscusScript.async = true;
+  document.querySelector(".giscus")?.appendChild(giscusScript);
+
+  const observer = new MutationObserver(() => {
+    const theme = giscusTheme();
+    const iframe = document.querySelector("iframe.giscus-frame");
+    if (iframe) {
+      iframe.contentWindow.postMessage({ giscus: { setConfig: { theme } } }, "https://giscus.app");
+    }
+  });
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+</script>
 
 <script>
   const btn = document.querySelector(".copy-btn");
@@ -170,5 +202,7 @@ const highlighted = highlighter.codeToHtml(code, {
     border-radius: 6px;
   }
 
-
+  .giscus {
+    margin-top: 3rem;
+  }
 </style>

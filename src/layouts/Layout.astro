@@ -11,7 +11,7 @@ import "../styles/global.css";
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="A minimal blog." />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
     <script type="text/javascript">
       (function(c,l,a,r,i,t,y){
           c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
@@ -24,7 +24,10 @@ import "../styles/global.css";
   <body>
     <header>
       <nav>
-        <a href="/" class="site-title">{SITE_TITLE}</a>
+        <a href="/" class="site-title">
+          <img src="/avatar.webp" alt="avatar" class="site-avatar" />
+          {SITE_TITLE}
+        </a>
         <div class="nav-links">
           <button id="theme-toggle" aria-label="Toggle theme">☾</button>
           <a href="/links/">Links</a>
@@ -93,6 +96,15 @@ import "../styles/global.css";
     font-size: 1.05rem;
     font-weight: 600;
     color: var(--fg);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .site-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
   }
 
   .nav-links {
