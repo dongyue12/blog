@@ -1,0 +1,49 @@
+# 友链配置
+# title: 页面标题
+# selfInfo: 自己的博客信息（用于展示在友链页顶部）
+# contact: 交换友链的联系方式说明
+# links: 友链列表
+#   name: 博客名称
+#   url: 博客地址
+#   img: 头像图片地址
+#   desc: 一句话描述
+# contactInfo: 申请友链时需要提供的信息列表
+# repo: GitHub 仓库地址（用于友链自助申请）
+# applyEnabled: 是否启用自助申请功能
+
+title: "友链"
+
+repo: "dongyue12/blog"
+applyEnabled: true
+
+selfInfo:
+  title: "冬月"
+  link: "https://dongyue.org/"
+  img: "https://dongyue.org/avatar.webp"
+  des: "分享自己的一些学习心得和生活琐事"
+
+links:
+  - name: "清遥"
+    url: "https://blog.askrabbit.net/"
+    img: "https://upyun.askrabbit.net/avatar.png"
+    desc: "遥夜泛清瑟，西风生翠萝。"
+
+  - name: "许家大院"
+    url: "https://blog.hesuisui.top/"
+    img: "https://blog.hesuisui.top/upload/ok-logo.png"
+    desc: "经常更新一些故事很有趣"
+
+  - name: "椰汁の小站"
+    url: "https://home.132614.xyz/"
+    img: "https://free.picui.cn/free/2026/03/23/69c12fe83f7a4.jpg"
+    desc: "一个热爱编程的学生"
+
+  - name: "番茄主理人"
+    url: "https://fqzlr.com/"
+    img: "https://q1.qlogo.cn/g?b=qq&nk=20447289&s=640"
+    desc: "坐而言不如起而行."
+
+  - name: "ZSSO"
+    url: "https://www.zsso.net/"
+    img: "https://t.alcy.cc/ycy"
+    desc: "一步一印，自成风景."  

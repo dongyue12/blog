@@ -1,0 +1,203 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { getCollection } from "astro:content";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("posts");
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+---
+
+<Layout>
+  <article class="prose">
+    <header>
+      <h1>{post.data.title}</h1>
+      <div class="meta">
+        <time datetime={post.data.pubDatetime.toISOString()}>
+          {post.data.pubDatetime.toLocaleDateString("en-CA")}
+        </time>
+        {post.data.tags && (
+          <span class="tags">
+            {post.data.tags.map((tag) => (
+              <span class="tag">{tag}</span>
+            ))}
+          </span>
+        )}
+      </div>
+      {post.data.description && (
+        <p class="description">{post.data.description}</p>
+      )}
+    </header>
+    <Content />
+  </article>
+</Layout>
+
+<script>
+  const LINE_LIMIT = 7;
+  for (const pre of document.querySelectorAll(".prose pre")) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "code-block";
+    pre.parentNode.insertBefore(wrapper, pre);
+    wrapper.appendChild(pre);
+
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "copy-btn";
+    copyBtn.textContent = "复制";
+    wrapper.appendChild(copyBtn);
+
+    copyBtn.addEventListener("click", async () => {
+      const code = pre.querySelector("code")?.textContent || pre.textContent;
+      try {
+        await navigator.clipboard.writeText(code);
+        copyBtn.textContent = "已复制!";
+        setTimeout(() => { copyBtn.textContent = "复制"; }, 1800);
+      } catch { copyBtn.textContent = "失败"; }
+    });
+
+    const lines = pre.textContent.split("\n").length - 1;
+    if (lines <= LINE_LIMIT) continue;
+
+    wrapper.classList.add("code-fold");
+    pre.style.maxHeight = `calc(${LINE_LIMIT} * 1.55em + 2rem)`;
+    pre.style.overflow = "hidden";
+
+    const fade = document.createElement("div");
+    fade.className = "code-fold-fade";
+    wrapper.appendChild(fade);
+
+    const foldBtn = document.createElement("button");
+    foldBtn.className = "code-fold-btn";
+    foldBtn.textContent = `展开全部 (${lines} 行)`;
+    wrapper.appendChild(foldBtn);
+
+    foldBtn.addEventListener("click", () => {
+      const expanded = wrapper.classList.toggle("expanded");
+      if (expanded) {
+        pre.style.maxHeight = pre.scrollHeight + "px";
+        foldBtn.textContent = "收起";
+      } else {
+        pre.style.maxHeight = `calc(${LINE_LIMIT} * 1.55em + 2rem)`;
+        foldBtn.textContent = `展开全部 (${lines} 行)`;
+      }
+    });
+  }
+</script>
+
+<style is:global>
+  .prose header {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .prose header h1 {
+    margin: 0 0 0.5rem;
+  }
+
+  .meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  .meta time {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .description {
+    font-size: 1rem;
+    color: var(--muted);
+    margin-top: 0.75rem;
+  }
+
+  .tags {
+    display: flex;
+    gap: 0.4rem;
+  }
+
+  .tag {
+    font-size: 0.75rem;
+    color: var(--muted);
+    background: var(--border);
+    padding: 0.1em 0.45em;
+    border-radius: 3px;
+  }
+
+  .code-block {
+    position: relative;
+    margin-top: 1rem;
+  }
+
+  .code-block pre {
+    transition: max-height 0.25s ease;
+    margin-top: 0;
+  }
+
+  .code-block:not(:hover) .copy-btn {
+    opacity: 0;
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    left: auto;
+    bottom: auto;
+    padding: 0.15em 0.5em;
+    font-size: 0.75rem;
+    color: var(--muted);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: opacity 0.15s, color 0.15s, background 0.15s;
+    z-index: 1;
+    line-height: 1.4;
+  }
+
+  .copy-btn:hover {
+    color: var(--fg);
+    background: var(--border);
+  }
+
+  .code-fold-fade {
+    position: absolute;
+    bottom: 2.2em;
+    left: 0;
+    right: 0;
+    height: 3em;
+    background: linear-gradient(transparent, var(--bg));
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+
+  .code-fold.expanded .code-fold-fade {
+    opacity: 0;
+  }
+
+  .code-fold-btn {
+    display: block;
+    width: 100%;
+    padding: 0.4em;
+    font-size: 0.8rem;
+    color: var(--muted);
+    background: var(--border);
+    border: none;
+    cursor: pointer;
+    border-radius: 0 0 6px 6px;
+    transition: color 0.15s, background 0.15s;
+  }
+
+  .code-fold-btn:hover {
+    color: var(--fg);
+    background: var(--muted);
+  }
+</style>

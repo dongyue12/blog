@@ -1,0 +1,153 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { SITE_DESCRIPTION } from "../config";
+import { getCollection } from "astro:content";
+
+const posts = await getCollection("posts");
+posts.sort((a, b) => b.data.pubDatetime.getTime() - a.data.pubDatetime.getTime());
+
+const allTags = [...new Set(posts.flatMap((p) => p.data.tags ?? []))].sort();
+---
+
+<Layout>
+  <section class="intro">
+    <h1>{SITE_DESCRIPTION}</h1>
+  </section>
+
+  <nav class="tag-filter">
+    <button class="tag-btn active" data-tag="">全部</button>
+    {allTags.map((tag) => (
+      <button class="tag-btn" data-tag={tag}>{tag}</button>
+    ))}
+  </nav>
+
+  <section class="posts">
+    {posts.map((post) => (
+      <article data-tags={(post.data.tags ?? []).join(",")}>
+        <time datetime={post.data.pubDatetime.toISOString()}>
+          {post.data.pubDatetime.toLocaleDateString("en-CA")}
+        </time>
+        <a href={`/posts/${post.slug}/`}>{post.data.title}</a>
+        {post.data.tags && (
+          <span class="tags">
+            {post.data.tags.map((tag) => (
+              <span class="tag">{tag}</span>
+            ))}
+          </span>
+        )}
+      </article>
+    ))}
+  </section>
+</Layout>
+
+<script>
+  const filter = document.querySelector(".tag-filter");
+  const articles = document.querySelectorAll(".posts article");
+
+  filter?.addEventListener("click", (e) => {
+    const btn = e.target.closest(".tag-btn");
+    if (!btn) return;
+
+    filter.querySelectorAll(".tag-btn").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    const tag = btn.dataset.tag;
+    for (const article of articles) {
+      if (!tag) {
+        article.hidden = false;
+      } else {
+        const tags = article.dataset.tags?.split(",") ?? [];
+        article.hidden = !tags.includes(tag);
+      }
+    }
+  });
+</script>
+
+<style is:global>
+  .intro h1 {
+    font-size: 1.05rem;
+    font-weight: 400;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 2.5rem;
+  }
+
+  .posts {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .posts article {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .posts article:first-child {
+    border-top: 1px solid var(--border);
+  }
+
+  .posts article time {
+    flex-shrink: 0;
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    min-width: 7ch;
+  }
+
+  .posts article a {
+    text-decoration: none;
+    font-weight: 450;
+  }
+
+  .posts article a:hover {
+    text-decoration: underline;
+  }
+
+  .tags {
+    margin-left: auto;
+    display: flex;
+    gap: 0.4rem;
+    flex-shrink: 0;
+  }
+
+  .tag-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .tag-btn {
+    font-size: 0.75rem;
+    color: var(--muted);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 0.2em 0.6em;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s, border-color 0.15s;
+    line-height: 1.5;
+  }
+
+  .tag-btn:hover {
+    color: var(--fg);
+    border-color: var(--muted);
+  }
+
+  .tag-btn.active {
+    color: var(--fg);
+    background: var(--border);
+    border-color: var(--border);
+  }
+
+  .tag {
+    font-size: 0.75rem;
+    color: var(--muted);
+    background: var(--border);
+    padding: 0.1em 0.45em;
+    border-radius: 3px;
+  }
+</style>

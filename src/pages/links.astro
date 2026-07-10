@@ -1,0 +1,176 @@
+---
+import Layout from "../layouts/Layout.astro";
+import fs from "node:fs";
+import yaml from "js-yaml";
+import { createHighlighter } from "shiki";
+
+interface FriendLink {
+  name: string;
+  url: string;
+  img: string;
+  desc: string;
+}
+
+interface FriendsData {
+  title: string;
+  repo: string;
+  applyEnabled: boolean;
+  selfInfo: { title: string; link: string; img: string; des: string };
+  links: FriendLink[];
+}
+
+const friendsData = yaml.load(fs.readFileSync("data/friends.yml", "utf-8")) as FriendsData;
+
+const code = `name: ${friendsData.selfInfo.title}
+url: ${friendsData.selfInfo.link}
+avatar: ${friendsData.selfInfo.img}
+desc: ${friendsData.selfInfo.des}`;
+
+const highlighter = await createHighlighter({
+  langs: ["yaml"],
+  themes: ["github-dark"],
+});
+
+const highlighted = highlighter.codeToHtml(code, {
+  lang: "yaml",
+  theme: "github-dark",
+});
+---
+
+<Layout>
+  <section class="self-info">
+    <h1>{friendsData.title}</h1>
+    <div class="code-block">
+      <button class="copy-btn">复制</button>
+      <Fragment set:html={highlighted} />
+    </div>
+    {friendsData.applyEnabled && (
+      <p class="apply-info">
+        博客友链持续开放，欢迎交换友链！请在 <a href={`https://github.com/${friendsData.repo}/issues`} target="_blank" rel="noopener">GitHub Issues</a> 中按格式提交。
+      </p>
+    )}
+  </section>
+
+  <section class="friend-list">
+    {friendsData.links.map((link) => (
+      <article class="friend-card">
+        <img src={link.img} alt={link.name} width="48" height="48" />
+        <div>
+          <a href={link.url} target="_blank" rel="noopener">{link.name}</a>
+          <p>{link.desc}</p>
+        </div>
+      </article>
+    ))}
+  </section>
+</Layout>
+
+<script>
+  const btn = document.querySelector(".copy-btn");
+  const pre = document.querySelector(".code-block pre");
+  btn?.addEventListener("click", async () => {
+    const text = pre?.textContent || "";
+    try {
+      await navigator.clipboard.writeText(text);
+      btn.textContent = "已复制!";
+      setTimeout(() => { btn.textContent = "复制"; }, 1800);
+    } catch {
+      btn.textContent = "失败";
+    }
+  });
+</script>
+
+<style is:global>
+  .self-info {
+    margin-bottom: 2.5rem;
+  }
+
+  .self-info h1 {
+    margin-bottom: 1.25rem;
+  }
+
+  .code-block {
+    position: relative;
+  }
+
+  .code-block pre {
+    padding: 1rem;
+    border-radius: 6px;
+    line-height: 1.5;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .code-block:not(:hover) .copy-btn {
+    opacity: 0;
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    padding: 0.15em 0.5em;
+    font-size: 0.75rem;
+    color: var(--muted);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: opacity 0.15s, color 0.15s, background 0.15s;
+    z-index: 1;
+    line-height: 1.4;
+  }
+
+  .copy-btn:hover {
+    color: var(--fg);
+    background: var(--border);
+  }
+
+  .friend-card img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  .friend-card a {
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .friend-card a:hover {
+    text-decoration: underline;
+  }
+
+  .friend-card p {
+    margin: 0.15rem 0 0;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  .apply-info {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-top: 0.5rem;
+  }
+
+  .friend-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .friend-card {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .friend-card:first-child {
+    border-top: 1px solid var(--border);
+  }
+
+
+</style>

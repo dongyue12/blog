@@ -1,0 +1,170 @@
+---
+import { SITE_TITLE } from "../config";
+import "../styles/global.css";
+---
+
+
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="A minimal blog." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{SITE_TITLE}</title>
+  </head>
+  <body>
+    <header>
+      <nav>
+        <a href="/" class="site-title">{SITE_TITLE}</a>
+        <div class="nav-links">
+          <button id="theme-toggle" aria-label="Toggle theme">☾</button>
+          <a href="/links/">Links</a>
+        </div>
+      </nav>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer>
+      <p>&copy; {new Date().getFullYear()} {SITE_TITLE}</p>
+    </footer>
+    <button id="back-to-top" aria-label="Back to top">↑</button>
+    <script>
+      const html = document.documentElement;
+      const themeBtn = document.getElementById("theme-toggle");
+      const topBtn = document.getElementById("back-to-top");
+
+      const saved = localStorage.getItem("theme");
+      if (saved) {
+        html.dataset.theme = saved;
+      }
+
+      themeBtn.textContent = html.dataset.theme === "dark" ? "☀" : "☾";
+
+      themeBtn.addEventListener("click", () => {
+        const next = html.dataset.theme === "dark" ? "light" : "dark";
+        html.dataset.theme = next;
+        localStorage.setItem("theme", next);
+        themeBtn.textContent = next === "dark" ? "☀" : "☾";
+      });
+
+      let ticking = false;
+      addEventListener("scroll", () => {
+        if (!ticking) {
+          requestAnimationFrame(() => {
+            topBtn.classList.toggle("show", scrollY > 300);
+            ticking = false;
+          });
+          ticking = true;
+        }
+      });
+
+      topBtn.addEventListener("click", () => {
+        scrollTo({ top: 0, behavior: "smooth" });
+      });
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  header {
+    padding: 2rem 0 1.5rem;
+    max-width: var(--max-w);
+    margin: 0 auto;
+  }
+
+  header nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .site-title {
+    text-decoration: none;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--fg);
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    font-size: 0.95rem;
+  }
+
+  .nav-links a {
+    text-decoration: none;
+    color: var(--muted);
+    transition: color 0.15s;
+  }
+
+  .nav-links a:hover {
+    color: var(--fg);
+  }
+
+  #theme-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0;
+    color: var(--muted);
+    transition: color 0.15s;
+  }
+
+  #theme-toggle:hover {
+    color: var(--fg);
+  }
+
+  main {
+    max-width: var(--max-w);
+    margin: 0 auto;
+    padding-bottom: 3rem;
+  }
+
+  footer {
+    max-width: var(--max-w);
+    margin: 0 auto;
+    padding: 1.5rem 0 3rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+
+  footer p {
+    margin: 0;
+  }
+
+  #back-to-top {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2.2rem;
+    height: 2.2rem;
+    font-size: 1.1rem;
+    color: var(--muted);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s, visibility 0.2s, color 0.15s, background 0.15s;
+    z-index: 99;
+    line-height: 1;
+  }
+
+  #back-to-top.show {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  #back-to-top:hover {
+    color: var(--fg);
+    background: var(--border);
+  }
+</style>
