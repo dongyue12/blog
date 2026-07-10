@@ -77,11 +77,12 @@ const { Content } = await post.render();
     });
 
     const lines = pre.textContent.split("\n").length - 1;
-    if (lines <= LINE_LIMIT) continue;
+    if (lines <= LINE_LIMIT) {
+      pre.classList.add("code-expanded");
+      continue;
+    }
 
     wrapper.classList.add("code-fold");
-    pre.style.maxHeight = `calc(${LINE_LIMIT} * 1.55em + 2rem)`;
-    pre.style.overflow = "hidden";
 
     const fade = document.createElement("div");
     fade.className = "code-fold-fade";
@@ -95,10 +96,10 @@ const { Content } = await post.render();
     foldBtn.addEventListener("click", () => {
       const expanded = wrapper.classList.toggle("expanded");
       if (expanded) {
-        pre.style.maxHeight = pre.scrollHeight + "px";
+        pre.classList.add("code-expanded");
         foldBtn.textContent = "收起";
       } else {
-        pre.style.maxHeight = `calc(${LINE_LIMIT} * 1.55em + 2rem)`;
+        pre.classList.remove("code-expanded");
         foldBtn.textContent = `展开全部 (${lines} 行)`;
       }
     });
@@ -185,6 +186,16 @@ const { Content } = await post.render();
   .code-block pre {
     transition: max-height 0.25s ease;
     margin-top: 0;
+  }
+
+  .prose pre {
+    max-height: calc(7 * 1.55em + 2rem);
+    overflow: hidden;
+  }
+
+  .prose pre.code-expanded {
+    max-height: none;
+    overflow: visible;
   }
 
   .code-block:not(:hover) .copy-btn {
