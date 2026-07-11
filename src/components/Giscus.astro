@@ -1,33 +1,35 @@
-<div class="giscus"></div>
+<div class="giscus">
+  <button class="giscus-btn">加载评论</button>
+</div>
 
 <script>
   const giscusTheme = () => document.documentElement.dataset.theme === "dark" ? "dark" : "light";
 
-  const el = document.querySelector(".giscus");
-  if (el) {
-    const io = new IntersectionObserver((entries) => {
-      if (!entries[0].isIntersecting) return;
-      io.disconnect();
+  document.querySelector(".giscus-btn")?.addEventListener("click", function init() {
+    this.removeEventListener("click", init);
+    this.textContent = "加载中…";
+    this.disabled = true;
 
-      const s = document.createElement("script");
-      s.src = "https://giscus.app/client.js";
-      s.setAttribute("data-repo", "dongyue12/giscus");
-      s.setAttribute("data-repo-id", "R_kgDOSakHjA");
-      s.setAttribute("data-category", "Announcements");
-      s.setAttribute("data-category-id", "DIC_kwDOSakHjM4C8zJM");
-      s.setAttribute("data-mapping", "pathname");
-      s.setAttribute("data-strict", "0");
-      s.setAttribute("data-reactions-enabled", "1");
-      s.setAttribute("data-emit-metadata", "0");
-      s.setAttribute("data-input-position", "bottom");
-      s.setAttribute("data-theme", giscusTheme());
-      s.setAttribute("data-lang", "zh-CN");
-      s.setAttribute("crossorigin", "anonymous");
-      s.async = true;
-      el.appendChild(s);
-    }, { rootMargin: "600px" });
-    io.observe(el);
-  }
+    const s = document.createElement("script");
+    s.src = "https://giscus.app/client.js";
+    s.setAttribute("data-repo", "dongyue12/giscus");
+    s.setAttribute("data-repo-id", "R_kgDOSakHjA");
+    s.setAttribute("data-category", "Announcements");
+    s.setAttribute("data-category-id", "DIC_kwDOSakHjM4C8zJM");
+    s.setAttribute("data-mapping", "pathname");
+    s.setAttribute("data-strict", "0");
+    s.setAttribute("data-reactions-enabled", "1");
+    s.setAttribute("data-emit-metadata", "0");
+    s.setAttribute("data-input-position", "bottom");
+    s.setAttribute("data-theme", giscusTheme());
+    s.setAttribute("data-lang", "zh-CN");
+    s.setAttribute("crossorigin", "anonymous");
+    s.async = true;
+
+    const container = this.closest(".giscus");
+    container.appendChild(s);
+    container.classList.add("giscus-loaded");
+  });
 
   const themeObserver = new MutationObserver(() => {
     const theme = giscusTheme();
@@ -42,5 +44,32 @@
 <style>
   .giscus {
     margin-top: 3rem;
+  }
+
+  .giscus-btn {
+    display: block;
+    width: 100%;
+    padding: 0.7em;
+    font-size: 0.9rem;
+    color: var(--muted);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s, border-color 0.15s;
+  }
+
+  .giscus-btn:hover {
+    color: var(--fg);
+    border-color: var(--muted);
+  }
+
+  .giscus-btn:disabled {
+    cursor: default;
+    opacity: 0.6;
+  }
+
+  .giscus-loaded .giscus-btn {
+    display: none;
   }
 </style>

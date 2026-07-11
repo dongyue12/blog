@@ -1,0 +1,28 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="404">
+  <h1>404</h1>
+  <p>页面未找到</p>
+  <a href="/">返回首页</a>
+</Layout>
+
+<style is:global>
+  h1 {
+    font-size: 3rem;
+    margin-top: 4rem;
+    text-align: center;
+  }
+
+  p {
+    text-align: center;
+    color: var(--muted);
+  }
+
+  a {
+    display: block;
+    text-align: center;
+    margin-top: 1.5rem;
+  }
+</style>
