@@ -29,12 +29,17 @@ desc: ${friendsData.selfInfo.des}`;
 
 const highlighter = await createHighlighter({
   langs: ["yaml"],
-  themes: ["github-dark"],
+  themes: ["github-dark", "github-light"],
 });
 
-const highlighted = highlighter.codeToHtml(code, {
+const highlightedDark = highlighter.codeToHtml(code, {
   lang: "yaml",
   theme: "github-dark",
+});
+
+const highlightedLight = highlighter.codeToHtml(code, {
+  lang: "yaml",
+  theme: "github-light",
 });
 ---
 
@@ -43,7 +48,8 @@ const highlighted = highlighter.codeToHtml(code, {
     <h1>{friendsData.title}</h1>
     <div class="code-block">
       <button class="copy-btn">复制</button>
-      <Fragment set:html={highlighted} />
+      <div class="code-highlight-dark"><Fragment set:html={highlightedDark} /></div>
+      <div class="code-highlight-light"><Fragment set:html={highlightedLight} /></div>
     </div>
     {friendsData.applyEnabled && (
       <p class="apply-info">
@@ -171,6 +177,18 @@ const highlighted = highlighter.codeToHtml(code, {
     padding: 0.9rem;
     border: 1px solid var(--border);
     border-radius: 6px;
+  }
+
+  .code-highlight-light {
+    display: none;
+  }
+
+  [data-theme="light"] .code-highlight-light {
+    display: block;
+  }
+
+  [data-theme="light"] .code-highlight-dark {
+    display: none;
   }
 
 </style>
