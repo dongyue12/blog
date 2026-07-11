@@ -22,7 +22,7 @@ const { Content } = await post.render();
       <h1>{post.data.title}</h1>
       <div class="meta">
         <time datetime={post.data.pubDatetime.toISOString()}>
-          {post.data.pubDatetime.toLocaleDateString("en-CA")}
+          {post.data.pubDatetime.toLocaleDateString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit" })}
         </time>
         {post.data.tags && (
           <span class="tags">

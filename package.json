@@ -1,15 +1,23 @@
 {
   "name": "my-blog",
-  "type": "module",
   "version": "1.0.0",
+  "dependencies": {
+    "@astrojs/rss": "^4.0.19",
+    "@astrojs/sitemap": "^3.7.3",
+    "astro": "^5.0.0"
+  },
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "lint": "eslint ."
   },
-  "dependencies": {
-    "@astrojs/sitemap": "^3.7.3",
-    "astro": "^5.0.0"
+  "type": "module",
+  "devDependencies": {
+    "eslint": "^10.7.0",
+    "eslint-plugin-astro": "^2.1.1",
+    "globals": "^17.7.0",
+    "typescript-eslint": "^8.63.0"
   }
 }

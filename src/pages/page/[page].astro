@@ -1,4 +1,5 @@
 ---
+import type { CollectionEntry } from "astro:content";
 import Layout from "../../layouts/Layout.astro";
 import SearchFilter from "../../components/SearchFilter.astro";
 import { SITE_DESCRIPTION, POSTS_PER_PAGE } from "../../config";
@@ -17,7 +18,7 @@ export async function getStaticPaths() {
 type Props = {
   page: number;
   totalPages: number;
-  posts: any[];
+  posts: CollectionEntry<"posts">[];
   allTags: string[];
 };
 
@@ -37,7 +38,7 @@ const pagePosts = allPosts.slice(start, start + POSTS_PER_PAGE);
     {pagePosts.map((post) => (
       <article data-title={post.data.title.toLowerCase()} data-tags={(post.data.tags ?? []).join(",").toLowerCase()}>
         <time datetime={post.data.pubDatetime.toISOString()}>
-          {post.data.pubDatetime.toLocaleDateString("en-CA")}
+          {post.data.pubDatetime.toLocaleDateString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit" })}
         </time>
         <a href={`/posts/${post.slug}/`}>{post.data.title}</a>
         {post.data.tags && (
