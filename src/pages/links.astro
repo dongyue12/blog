@@ -1,5 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import Giscus from "../components/Giscus.astro";
 import fs from "node:fs";
 import yaml from "js-yaml";
 import { createHighlighter } from "shiki";
@@ -54,7 +55,7 @@ const highlighted = highlighter.codeToHtml(code, {
   <section class="friend-list">
     {friendsData.links.map((link) => (
       <article class="friend-card">
-        <img src={link.img} alt={link.name} width="48" height="48" />
+        <img src={link.img} alt={link.name} width="48" height="48" loading="lazy" />
         <div>
           <a href={link.url} target="_blank" rel="noopener">{link.name}</a>
           <p>{link.desc}</p>
@@ -63,38 +64,8 @@ const highlighted = highlighter.codeToHtml(code, {
     ))}
   </section>
 
-  <div class="giscus"></div>
+  <Giscus />
 </Layout>
-
-<script>
-  const giscusTheme = () => document.documentElement.dataset.theme === "dark" ? "dark" : "light";
-
-  const giscusScript = document.createElement("script");
-  giscusScript.src = "https://giscus.app/client.js";
-  giscusScript.setAttribute("data-repo", "dongyue12/giscus");
-  giscusScript.setAttribute("data-repo-id", "R_kgDOSakHjA");
-  giscusScript.setAttribute("data-category", "Announcements");
-  giscusScript.setAttribute("data-category-id", "DIC_kwDOSakHjM4C8zJM");
-  giscusScript.setAttribute("data-mapping", "pathname");
-  giscusScript.setAttribute("data-strict", "0");
-  giscusScript.setAttribute("data-reactions-enabled", "1");
-  giscusScript.setAttribute("data-emit-metadata", "0");
-  giscusScript.setAttribute("data-input-position", "bottom");
-  giscusScript.setAttribute("data-theme", giscusTheme());
-  giscusScript.setAttribute("data-lang", "zh-CN");
-  giscusScript.setAttribute("crossorigin", "anonymous");
-  giscusScript.async = true;
-  document.querySelector(".giscus")?.appendChild(giscusScript);
-
-  const observer = new MutationObserver(() => {
-    const theme = giscusTheme();
-    const iframe = document.querySelector("iframe.giscus-frame");
-    if (iframe) {
-      iframe.contentWindow.postMessage({ giscus: { setConfig: { theme } } }, "https://giscus.app");
-    }
-  });
-  observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
-</script>
 
 <script>
   const btn = document.querySelector(".copy-btn");
@@ -202,7 +173,4 @@ const highlighted = highlighter.codeToHtml(code, {
     border-radius: 6px;
   }
 
-  .giscus {
-    margin-top: 3rem;
-  }
 </style>

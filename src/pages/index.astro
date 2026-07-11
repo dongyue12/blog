@@ -1,5 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import SearchFilter from "../components/SearchFilter.astro";
 import { SITE_DESCRIPTION, POSTS_PER_PAGE } from "../config";
 import { getCollection } from "astro:content";
 
@@ -16,17 +17,7 @@ const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
     <h1>{SITE_DESCRIPTION}</h1>
   </section>
 
-  <div class="search-wrapper">
-    <input type="text" class="search-input" placeholder="搜索文章..." />
-    <button class="search-clear" aria-label="清除">×</button>
-  </div>
-
-  <nav class="tag-filter">
-    <button class="tag-btn active" data-tag="">全部</button>
-    {allTags.map((tag) => (
-      <button class="tag-btn" data-tag={tag}>{tag}</button>
-    ))}
-  </nav>
+  <SearchFilter allTags={allTags} />
 
   <section class="posts">
     {pagePosts.map((post) => (
@@ -56,42 +47,6 @@ const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
     )}
   </nav>
 </Layout>
-
-<script>
-  const articles = document.querySelectorAll(".posts article");
-  const filterNav = document.querySelector(".tag-filter");
-  const input = document.querySelector(".search-input");
-  const clearBtn = document.querySelector(".search-clear");
-  let activeTag = "";
-
-  function doFilter() {
-    const q = input.value.trim().toLowerCase();
-    for (const article of articles) {
-      const tags = article.dataset.tags?.split(",") ?? [];
-      const tagMatch = !activeTag || tags.includes(activeTag);
-      const textMatch = !q || article.dataset.title?.toLowerCase().includes(q) || article.dataset.tags?.toLowerCase().includes(q);
-      article.classList.toggle("filter-hidden", !(tagMatch && textMatch));
-    }
-    clearBtn?.classList.toggle("show", q.length > 0);
-  }
-
-  input?.addEventListener("input", doFilter);
-
-  clearBtn?.addEventListener("click", () => {
-    input.value = "";
-    doFilter();
-    input.focus();
-  });
-
-  filterNav?.addEventListener("click", (e) => {
-    const btn = e.target.closest(".tag-btn");
-    if (!btn) return;
-    filterNav.querySelectorAll(".tag-btn").forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
-    activeTag = btn.dataset.tag;
-    doFilter();
-  });
-</script>
 
 <style is:global>
   .intro h1 {
@@ -145,85 +100,6 @@ const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
     display: flex;
     gap: 0.4rem;
     flex-shrink: 0;
-  }
-
-  .search-wrapper {
-    position: relative;
-    margin-bottom: 1rem;
-  }
-
-  .search-input {
-    width: 100%;
-    padding: 0.5em 0.7em;
-    font-size: 0.9rem;
-    background: var(--bg);
-    color: var(--fg);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-
-  .search-input:focus {
-    border-color: var(--muted);
-  }
-
-  .search-input::placeholder {
-    color: var(--muted);
-  }
-
-  .search-clear {
-    position: absolute;
-    right: 0.4em;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    font-size: 1rem;
-    color: var(--muted);
-    cursor: pointer;
-    padding: 0.2em 0.3em;
-    line-height: 1;
-    opacity: 0;
-    transition: opacity 0.15s, color 0.15s;
-  }
-
-  .search-clear.show {
-    opacity: 1;
-  }
-
-  .search-clear:hover {
-    color: var(--fg);
-  }
-
-  .tag-filter {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .tag-btn {
-    font-size: 0.75rem;
-    color: var(--muted);
-    background: var(--bg);
-    border: 1px solid var(--border);
-    padding: 0.2em 0.6em;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: color 0.15s, background 0.15s, border-color 0.15s;
-    line-height: 1.5;
-  }
-
-  .tag-btn:hover {
-    color: var(--fg);
-    border-color: var(--muted);
-  }
-
-  .tag-btn.active {
-    color: var(--fg);
-    background: var(--border);
-    border-color: var(--border);
   }
 
   .tag {

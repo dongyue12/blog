@@ -1,5 +1,6 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import Giscus from "../../components/Giscus.astro";
 import { getCollection } from "astro:content";
 
 export async function getStaticPaths() {
@@ -38,7 +39,7 @@ const { Content } = await post.render();
     <Content />
   </article>
 
-  <div class="giscus"></div>
+  <Giscus />
 
   <nav class="post-nav">
     {prevPost && (
@@ -56,7 +57,10 @@ const { Content } = await post.render();
 
 <script>
   const LINE_LIMIT = 7;
-  for (const pre of document.querySelectorAll(".prose pre")) {
+  const prose = document.querySelector(".prose");
+  if (!prose) throw new Error("missing .prose");
+
+  for (const pre of prose.querySelectorAll("pre")) {
     const wrapper = document.createElement("div");
     wrapper.className = "code-block";
     pre.parentNode.insertBefore(wrapper, pre);
@@ -66,15 +70,6 @@ const { Content } = await post.render();
     copyBtn.className = "copy-btn";
     copyBtn.textContent = "复制";
     wrapper.appendChild(copyBtn);
-
-    copyBtn.addEventListener("click", async () => {
-      const code = pre.querySelector("code")?.textContent || pre.textContent;
-      try {
-        await navigator.clipboard.writeText(code);
-        copyBtn.textContent = "已复制!";
-        setTimeout(() => { copyBtn.textContent = "复制"; }, 1800);
-      } catch { copyBtn.textContent = "失败"; }
-    });
 
     const lines = pre.textContent.split("\n").length - 1;
     if (lines <= LINE_LIMIT) {
@@ -92,49 +87,38 @@ const { Content } = await post.render();
     foldBtn.className = "code-fold-btn";
     foldBtn.textContent = `展开全部 (${lines} 行)`;
     wrapper.appendChild(foldBtn);
-
-    foldBtn.addEventListener("click", () => {
-      const expanded = wrapper.classList.toggle("expanded");
-      if (expanded) {
-        pre.classList.add("code-expanded");
-        foldBtn.textContent = "收起";
-      } else {
-        pre.classList.remove("code-expanded");
-        foldBtn.textContent = `展开全部 (${lines} 行)`;
-      }
-    });
   }
-</script>
 
-<script>
-  const giscusTheme = () => document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+  prose.addEventListener("click", (e) => {
+    const copyBtn = e.target.closest(".copy-btn");
+    if (copyBtn) {
+      const wrapper = copyBtn.closest(".code-block");
+      const pre = wrapper?.querySelector("pre");
+      const code = pre?.querySelector("code")?.textContent || pre?.textContent || "";
+      navigator.clipboard.writeText(code).then(() => {
+        copyBtn.textContent = "已复制!";
+        setTimeout(() => { copyBtn.textContent = "复制"; }, 1800);
+      }).catch(() => { copyBtn.textContent = "失败"; });
+      return;
+    }
 
-  const giscusScript = document.createElement("script");
-  giscusScript.src = "https://giscus.app/client.js";
-  giscusScript.setAttribute("data-repo", "dongyue12/giscus");
-  giscusScript.setAttribute("data-repo-id", "R_kgDOSakHjA");
-  giscusScript.setAttribute("data-category", "Announcements");
-  giscusScript.setAttribute("data-category-id", "DIC_kwDOSakHjM4C8zJM");
-  giscusScript.setAttribute("data-mapping", "pathname");
-  giscusScript.setAttribute("data-strict", "0");
-  giscusScript.setAttribute("data-reactions-enabled", "1");
-  giscusScript.setAttribute("data-emit-metadata", "0");
-  giscusScript.setAttribute("data-input-position", "bottom");
-  giscusScript.setAttribute("data-theme", giscusTheme());
-  giscusScript.setAttribute("data-lang", "zh-CN");
-  giscusScript.setAttribute("crossorigin", "anonymous");
-  giscusScript.async = true;
-  document.querySelector(".giscus")?.appendChild(giscusScript);
-
-  const observer = new MutationObserver(() => {
-    const theme = giscusTheme();
-    const iframe = document.querySelector("iframe.giscus-frame");
-    if (iframe) {
-      iframe.contentWindow.postMessage({ giscus: { setConfig: { theme } } }, "https://giscus.app");
+    const foldBtn = e.target.closest(".code-fold-btn");
+    if (!foldBtn) return;
+    const wrapper = foldBtn.closest(".code-fold");
+    const pre = wrapper?.querySelector("pre");
+    if (!wrapper || !pre) return;
+    const expanded = wrapper.classList.toggle("expanded");
+    if (expanded) {
+      pre.classList.add("code-expanded");
+      foldBtn.textContent = "收起";
+    } else {
+      pre.classList.remove("code-expanded");
+      foldBtn.textContent = `展开全部 (${pre.textContent.split("\n").length - 1} 行)`;
     }
   });
-  observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 </script>
+
+
 
 <style is:global>
   .prose header {
@@ -256,10 +240,6 @@ const { Content } = await post.render();
   .code-fold-btn:hover {
     color: var(--fg);
     background: var(--muted);
-  }
-
-  .giscus {
-    margin-top: 3rem;
   }
 
   .post-nav {
