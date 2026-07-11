@@ -165,6 +165,12 @@ const { Content, headings } = await post.render();
     margin: 0 0 0.5rem;
   }
 
+  @media (max-width: 640px) {
+    .prose header h1 {
+      font-size: 1.35rem;
+    }
+  }
+
   .meta {
     display: flex;
     align-items: center;
@@ -301,6 +307,23 @@ const { Content, headings } = await post.render();
   .post-nav-next {
     text-align: right;
     margin-left: auto;
+  }
+
+  @media (max-width: 640px) {
+    .post-nav {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .post-nav a {
+      max-width: 100%;
+      font-size: 0.85rem;
+    }
+
+    .post-nav-next {
+      text-align: left;
+      margin-left: 0;
+    }
   }
 
   .toc {

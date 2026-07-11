@@ -179,6 +179,16 @@ const highlightedLight = highlighter.codeToHtml(code, {
     border-radius: 6px;
   }
 
+  @media (max-width: 640px) {
+    .friend-list {
+      grid-template-columns: 1fr;
+    }
+
+    .self-info h1 {
+      font-size: 1.35rem;
+    }
+  }
+
   .code-highlight-light {
     display: none;
   }
