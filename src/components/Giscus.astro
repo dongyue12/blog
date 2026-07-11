@@ -36,6 +36,7 @@
     const iframe = document.querySelector("iframe.giscus-frame");
     if (iframe) {
       iframe.contentWindow.postMessage({ giscus: { setConfig: { theme } } }, "https://giscus.app");
+      themeObserver.disconnect();
     }
   });
   themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });

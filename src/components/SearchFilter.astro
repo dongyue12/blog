@@ -24,6 +24,8 @@ const { allTags } = Astro.props;
   const clearBtn = document.querySelector(".search-clear");
   let activeTag = "";
 
+  let debounceTimer;
+
   function doFilter() {
     const q = input.value.trim().toLowerCase();
     for (const article of articles) {
@@ -35,7 +37,10 @@ const { allTags } = Astro.props;
     clearBtn?.classList.toggle("show", q.length > 0);
   }
 
-  input?.addEventListener("input", doFilter);
+  input?.addEventListener("input", () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(doFilter, 150);
+  });
 
   clearBtn?.addEventListener("click", () => {
     input.value = "";
