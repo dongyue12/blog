@@ -38,6 +38,10 @@
 .posts article a {
   text-decoration: none;
   font-weight: 450;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .posts article a:hover {
@@ -93,4 +97,46 @@
 .page-info {
   font-size: 0.85rem;
   color: var(--muted);
+}
+
+@media (max-width: 640px) {
+  .posts article {
+    flex-wrap: wrap;
+    gap: 0.25rem 0.6rem;
+    padding: 0.7rem 0;
+  }
+
+  .posts article time {
+    min-width: unset;
+    width: 100%;
+    font-size: 0.75rem;
+  }
+
+  .posts article a {
+    font-size: 0.95rem;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tags {
+    margin-left: auto;
+    gap: 0.3rem;
+  }
+
+  .tag {
+    font-size: 0.7rem;
+  }
+
+  .intro h1 {
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .pagination a, .page-disabled {
+    padding: 0.4em 0.9em;
+    font-size: 0.85rem;
+  }
 }

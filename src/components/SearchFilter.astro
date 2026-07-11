@@ -125,6 +125,14 @@ const { allTags } = Astro.props;
     cursor: pointer;
     transition: color 0.15s, background 0.15s, border-color 0.15s;
     line-height: 1.5;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  @media (max-width: 640px) {
+    .tag-btn {
+      padding: 0.3em 0.7em;
+      font-size: 0.8rem;
+    }
   }
 
   .tag-btn:hover {
