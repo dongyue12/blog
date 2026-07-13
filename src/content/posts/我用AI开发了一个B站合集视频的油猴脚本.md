@@ -2,8 +2,8 @@
 pubDatetime: 2026-07-10
 title: 我用AI开发了一个B站合集视频的油猴脚本
 tags: [工具]
+description: 极致性能，支持100+大列表，精准响应集数切换
 featured: true
-description: 我自己常用的一些工具和软件，整理到一起方便查阅。
 ---
 ## 我用AI开发了一个B站合集视频的油猴脚本
 下方是全部代码
