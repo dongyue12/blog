@@ -18,44 +18,86 @@ const { allTags } = Astro.props;
 </nav>
 
 <script>
-  const articles = document.querySelectorAll(".posts article");
-  const filterNav = document.querySelector(".tag-filter");
-  const input = document.querySelector(".search-input");
-  const clearBtn = document.querySelector(".search-clear");
-  let activeTag = "";
+  function initSearchFilter() {
+    const filterNav = document.querySelector(".tag-filter");
+    const input = document.querySelector(".search-input");
+    const clearBtn = document.querySelector(".search-clear");
 
-  let debounceTimer;
+    if (!filterNav) return;
 
-  function doFilter() {
-    const q = input.value.trim().toLowerCase();
-    for (const article of articles) {
-      const tags = article.dataset.tags?.split(",") ?? [];
-      const tagMatch = !activeTag || tags.includes(activeTag);
-      const textMatch = !q || article.dataset.title?.toLowerCase().includes(q) || article.dataset.tags?.toLowerCase().includes(q);
-      article.classList.toggle("filter-hidden", !(tagMatch && textMatch));
+    for (const article of document.querySelectorAll(".posts article")) {
+      const link = article.querySelector("a");
+      if (link && !article.dataset.originalTitle) {
+        article.dataset.originalTitle = link.innerHTML;
+      }
     }
-    clearBtn?.classList.toggle("show", q.length > 0);
+
+    function doFilter() {
+      const articles = document.querySelectorAll(".posts article");
+      const qRaw = input?.value.trim() ?? "";
+      const q = qRaw.toLowerCase();
+      const activeTag = filterNav.querySelector(".tag-btn.active")?.dataset.tag ?? "";
+
+      for (const article of articles) {
+        const link = article.querySelector("a");
+        if (link && article.dataset.originalTitle) {
+          link.innerHTML = article.dataset.originalTitle;
+        }
+
+        const tags = article.dataset.tags?.split(",") ?? [];
+        const tagMatch = !activeTag || tags.includes(activeTag);
+        const titleMatch = !q || article.dataset.title?.includes(q);
+        const tagTextMatch = !q || article.dataset.tags?.toLowerCase().includes(q);
+        const textMatch = titleMatch || tagTextMatch;
+        const visible = tagMatch && textMatch;
+
+        article.classList.toggle("filter-hidden", !visible);
+
+        if (visible && q && link) {
+          const title = link.textContent || "";
+          const idx = title.toLowerCase().indexOf(q);
+          if (idx !== -1) {
+            link.innerHTML =
+              title.slice(0, idx) +
+              `<mark>${title.slice(idx, idx + qRaw.length)}</mark>` +
+              title.slice(idx + qRaw.length);
+          }
+        }
+      }
+
+      clearBtn?.classList.toggle("show", q.length > 0);
+    }
+
+    if (!filterNav._searchInited) {
+      filterNav._searchInited = true;
+
+      let debounceTimer;
+
+      input?.addEventListener("input", () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(doFilter, 150);
+      });
+
+      clearBtn?.addEventListener("click", () => {
+        input.value = "";
+        doFilter();
+        input.focus();
+      });
+
+      filterNav.addEventListener("click", (e) => {
+        const btn = e.target.closest(".tag-btn");
+        if (!btn) return;
+        filterNav.querySelectorAll(".tag-btn").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        doFilter();
+      });
+    }
+
+    doFilter();
   }
 
-  input?.addEventListener("input", () => {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(doFilter, 150);
-  });
-
-  clearBtn?.addEventListener("click", () => {
-    input.value = "";
-    doFilter();
-    input.focus();
-  });
-
-  filterNav?.addEventListener("click", (e) => {
-    const btn = e.target.closest(".tag-btn");
-    if (!btn) return;
-    filterNav.querySelectorAll(".tag-btn").forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
-    activeTag = btn.dataset.tag;
-    doFilter();
-  });
+  initSearchFilter();
+  document.addEventListener("astro:page-load", initSearchFilter);
 </script>
 
 <style>
@@ -144,5 +186,17 @@ const { allTags } = Astro.props;
     color: var(--fg);
     background: var(--border);
     border-color: var(--border);
+  }
+
+  mark {
+    background: #fde68a;
+    color: #1a1a1a;
+    padding: 0.05em 0.15em;
+    border-radius: 2px;
+  }
+
+  [data-theme="dark"] mark {
+    background: #854d0e;
+    color: #fef3c7;
   }
 </style>

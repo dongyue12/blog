@@ -67,8 +67,10 @@ const { Content, headings } = await post.render();
 </Layout>
 
 <script>
-  const prose = document.querySelector(".prose");
-  if (prose) {
+  function initPostPage() {
+    const prose = document.querySelector(".prose");
+    if (!prose) return;
+
     const LINE_LIMIT = 7;
     const countLines = (text) => text.replace(/\n$/, "").split("\n").length;
 
@@ -151,6 +153,9 @@ const { Content, headings } = await post.render();
       document.body.appendChild(overlay);
     });
   }
+
+  initPostPage();
+  document.addEventListener("astro:page-load", initPostPage);
 </script>
 
 

@@ -1,5 +1,6 @@
 ---
 import { SITE_TITLE, SITE_DESCRIPTION } from "../config";
+import { ViewTransitions } from "astro:transitions";
 import "../styles/global.css";
 
 export interface Props {
@@ -24,6 +25,8 @@ const ogImage = new URL(image, site);
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={pageDesc} />
     <meta property="og:title" content={pageTitle} />
+    <meta name="theme-color" content="#ffffff" />
+    <ViewTransitions />
     <meta property="og:description" content={pageDesc} />
     <meta property="og:image" content={ogImage.href} />
     <meta property="og:url" content={url.href} />
@@ -35,13 +38,19 @@ const ogImage = new URL(image, site);
     <link rel="preconnect" href="https://www.clarity.ms" />
     <link rel="preconnect" href="https://giscus.app" />
     <title>{pageTitle}</title>
-    <script>
-      const t = localStorage.getItem("theme");
-      if (t) document.documentElement.dataset.theme = t;
+    <script is:inline>
+      (function () {
+        const theme = localStorage.getItem("theme");
+        if (theme) {
+          document.documentElement.dataset.theme = theme;
+          const meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.content = theme === "dark" ? "#0f0f0f" : "#ffffff";
+        }
+      })();
     </script>
   </head>
-  <body>
-    <header>
+  <body transition:animate="none">
+    <header transition:name="site-header" transition:persist>
       <nav>
         <a href="/" class="site-title">
           <img src="/avatar.webp" alt="avatar" class="site-avatar" width="28" height="28" />
@@ -59,42 +68,70 @@ const ogImage = new URL(image, site);
     <main>
       <slot />
     </main>
-    <footer>
+    <footer transition:name="site-footer" transition:persist>
       <p>&copy; {new Date().getFullYear()} {SITE_TITLE}</p>
     </footer>
-    <button id="back-to-top" aria-label="Back to top">↑</button>
+    <button id="back-to-top" aria-label="Back to top" transition:name="back-to-top" transition:persist>↑</button>
     <script>
-      const html = document.documentElement;
-      const themeBtn = document.getElementById("theme-toggle");
-      const topBtn = document.getElementById("back-to-top");
-
-      if (themeBtn) {
-        themeBtn.textContent = html.dataset.theme === "dark" ? "☀" : "☾";
-
-        themeBtn.addEventListener("click", () => {
-          const next = html.dataset.theme === "dark" ? "light" : "dark";
-          html.dataset.theme = next;
-          localStorage.setItem("theme", next);
-          themeBtn.textContent = next === "dark" ? "☀" : "☾";
-        });
+      function getSavedTheme() {
+        return localStorage.getItem("theme");
       }
 
-      if (topBtn) {
-        let ticking = false;
-        addEventListener("scroll", () => {
-          if (!ticking) {
-            requestAnimationFrame(() => {
-              topBtn.classList.toggle("show", scrollY > 300);
-              ticking = false;
+      function updateThemeColor(root = document) {
+        const html = root.documentElement;
+        const meta = root.querySelector('meta[name="theme-color"]');
+        if (meta) {
+          meta.content = html.dataset.theme === "dark" ? "#0f0f0f" : "#ffffff";
+        }
+      }
+
+      function initPage() {
+        const html = document.documentElement;
+        const saved = getSavedTheme();
+        if (saved) html.dataset.theme = saved;
+        updateThemeColor();
+
+        const themeBtn = document.getElementById("theme-toggle");
+        const topBtn = document.getElementById("back-to-top");
+
+        if (themeBtn) {
+          themeBtn.textContent = html.dataset.theme === "dark" ? "☀" : "☾";
+          if (!themeBtn.dataset.themeInited) {
+            themeBtn.dataset.themeInited = "true";
+            themeBtn.addEventListener("click", () => {
+              const next = html.dataset.theme === "dark" ? "light" : "dark";
+              html.dataset.theme = next;
+              localStorage.setItem("theme", next);
+              themeBtn.textContent = next === "dark" ? "☀" : "☾";
+              updateThemeColor();
             });
-            ticking = true;
           }
-        });
+        }
 
-        topBtn.addEventListener("click", () => {
-          scrollTo({ top: 0, behavior: "smooth" });
-        });
+        if (topBtn && !topBtn._inited) {
+          topBtn._inited = true;
+          let ticking = false;
+          const onScroll = () => {
+            if (!ticking) {
+              requestAnimationFrame(() => {
+                topBtn.classList.toggle("show", scrollY > 300);
+                ticking = false;
+              });
+              ticking = true;
+            }
+          };
+          addEventListener("scroll", onScroll);
+          topBtn.addEventListener("click", () => scrollTo({ top: 0, behavior: "smooth" }));
+        }
       }
+
+      initPage();
+      document.addEventListener("astro:before-swap", (event) => {
+        const saved = getSavedTheme();
+        if (saved) event.newDocument.documentElement.dataset.theme = saved;
+        updateThemeColor(event.newDocument);
+      });
+      document.addEventListener("astro:page-load", initPage);
     </script>
     <script defer type="text/javascript">
       /* eslint-disable prefer-rest-params */

@@ -74,18 +74,24 @@ const highlightedLight = highlighter.codeToHtml(code, {
 </Layout>
 
 <script>
-  const btn = document.querySelector(".copy-btn");
-  const pre = document.querySelector(".code-block pre");
-  btn?.addEventListener("click", async () => {
-    const text = pre?.textContent || "";
-    try {
-      await navigator.clipboard.writeText(text);
-      btn.textContent = "已复制!";
-      setTimeout(() => { btn.textContent = "复制"; }, 1800);
-    } catch {
-      btn.textContent = "失败";
-    }
-  });
+  function initLinksPage() {
+    const btn = document.querySelector(".copy-btn");
+    const pre = document.querySelector(".code-block pre");
+    if (!btn) return;
+    btn.addEventListener("click", async () => {
+      const text = pre?.textContent || "";
+      try {
+        await navigator.clipboard.writeText(text);
+        btn.textContent = "已复制!";
+        setTimeout(() => { btn.textContent = "复制"; }, 1800);
+      } catch {
+        btn.textContent = "失败";
+      }
+    });
+  }
+
+  initLinksPage();
+  document.addEventListener("astro:page-load", initLinksPage);
 </script>
 
 <style is:global>
