@@ -2,7 +2,7 @@
 title: "Astro 添加访问统计"
 pubDatetime: 2026-05-18
 description: "不蒜子数据统计服务"
-tags: [astro, 博客, 不蒜子]
+tags: [Astro, 博客, 不蒜子]
 featured: true
 ---
 

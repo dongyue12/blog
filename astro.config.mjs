@@ -6,7 +6,7 @@ export default defineConfig({
   trailingSlash: "always",
   compressHTML: true,
   build: {
-    inlineStylesheets: "never",
+    inlineStylesheets: "auto",
   },
   integrations: [
     sitemap(),
