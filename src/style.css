@@ -228,7 +228,7 @@ table {
   font-size: var(--size-small);
 }
 th, td { text-align: left; padding: 0.4em 0.6em; border-bottom: 1px solid var(--line); }
-th { font-weight: 600; text-align: center; } /* 表头居中，数据左对齐 */
+th { font-weight: 600; text-align: left; }
 
 /* ---------- 首页列表 ---------- */
 
