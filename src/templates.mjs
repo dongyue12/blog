@@ -106,8 +106,9 @@ function commentBox() {
         async></script>\n`;
 }
 
-// 图片点击放大：用原生 <dialog>，零依赖、零构建，就这 15 行
-// 只有正文里真的有 <img> 时才注入，没有图片的文章页一个字节都不多
+// 图片点击放大 + 滚轮缩放 + 拖动平移
+// 用原生 <dialog>，零依赖；只有正文里有 <img> 时才注入
+// 注意：这里不用模板字符串（避免和外层反引号打架），一律用字符串拼接
 function lightbox() {
   return `      <dialog id="lightbox" class="lightbox">
         <img id="lightbox-img" alt="">
@@ -115,14 +116,49 @@ function lightbox() {
       <script>
         const box = document.getElementById('lightbox');
         const big = document.getElementById('lightbox-img');
+        let scale = 1, x = 0, y = 0;          // 当前缩放和位移
+        let dragging = false, sx = 0, sy = 0, ox = 0, oy = 0, moved = 0;
+
+        function apply() {
+          big.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(' + scale + ')';
+        }
+        function reset() { scale = 1; x = 0; y = 0; moved = 0; apply(); }
+
+        // 点正文里的图片 → 打开灯箱
         for (const img of document.querySelectorAll('article img')) {
           img.addEventListener('click', () => {
-            big.src = img.src; // 用卡片图自己的地址，不改尺寸
+            big.src = img.src;
             big.alt = img.alt;
-            box.showModal(); // 原生模态：自动有遮罩、自动锁滚动、Esc 自动关
+            reset();
+            box.showModal();     // 原生模态：遮罩、锁滚动、Esc 关闭都是自带的
           });
         }
-        box.addEventListener('click', () => box.close()); // 点哪里都关
+
+        // 滚轮缩放：上滚放大、下滚缩小，限制 0.5x ~ 5x
+        box.addEventListener('wheel', (e) => {
+          e.preventDefault();     // 不然整个页面会跟着滚
+          scale = Math.min(5, Math.max(0.5, scale * (e.deltaY < 0 ? 1.15 : 1 / 1.15)));
+          apply();
+        }, { passive: false });   // 要 preventDefault 就不能用默认的 passive
+
+        // 放大后图片会超出视口，按住拖动平移
+        big.addEventListener('pointerdown', (e) => {
+          dragging = true; moved = 0;
+          sx = e.clientX; sy = e.clientY; ox = x; oy = y;
+          big.setPointerCapture(e.pointerId);   // 拖到图片外面也不丢
+        });
+        big.addEventListener('pointermove', (e) => {
+          if (!dragging) return;
+          x = ox + (e.clientX - sx);
+          y = oy + (e.clientY - sy);
+          moved = Math.hypot(e.clientX - sx, e.clientY - sy);
+          apply();
+        });
+        big.addEventListener('pointerup', () => { dragging = false; });
+
+        // 只有点「遮罩背景」才关闭（拖动过就不算点击）；双击复位
+        box.addEventListener('click', (e) => { if (e.target === box && moved < 4) box.close(); });
+        big.addEventListener('dblclick', reset);
       </script>\n`;
 }
 

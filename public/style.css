@@ -253,3 +253,17 @@ article img { cursor: zoom-in; }
   border-radius: 4px;
   cursor: zoom-out;
 }
+
+/* 灯箱：放大后可能超出视口，用 transform 缩放，容器负责居中 */
+.lightbox {
+  max-width: 92vw;
+  max-height: 92vh;
+  overflow: hidden;
+  touch-action: none;
+}
+.lightbox img {
+  transform-origin: center center;
+  cursor: grab;
+  user-select: none;
+}
+.lightbox img:active { cursor: grabbing; }
