@@ -6,4 +6,5 @@ export const SITE = {
   lang: 'zh-CN',
   // 部署后改成你的真实地址（结尾不要带斜杠），RSS / sitemap 里要用绝对链接
   url: 'https://example.com',
+  postsPerPage: 10, // 首页每页显示几篇，超出的分到 /page/2/ 等
 };

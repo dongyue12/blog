@@ -109,3 +109,18 @@ hr { border: none; border-top: 1px solid var(--line); margin: 2.5em 0; }
     --code-bg: #161b22;
   }
 }
+
+/* 分页 */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.9rem;
+}
+.page-link { text-decoration: none; }
+.page-link--off { color: var(--muted); }
+.page-link--num { color: var(--muted); }

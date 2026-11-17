@@ -50,23 +50,40 @@ function postCard(post) {
       </li>`;
 }
 
+// 分页导航：第 1 页是 /，第 N 页是 /page/N/
+function pagination({ page, totalPages }) {
+  if (totalPages <= 1) return '';
+
+  const prev = page > 1 ? `<a class="page-link" href="${page === 2 ? '/' : `/page/${page - 1}/`}">← 上一页</a>` : '<span class="page-link page-link--off">← 上一页</span>';
+  const next = page < totalPages ? `<a class="page-link" href="/page/${page + 1}/">下一页 →</a>` : '<span class="page-link page-link--off">下一页 →</span>';
+
+  return `
+    <nav class="pagination">
+      ${prev}
+      <span class="page-link page-link--num">${page} / ${totalPages}</span>
+      ${next}
+    </nav>`;
+}
+
 // 首页：文章列表（顺序由调用方排好，这里不再排序）
-export function listPage({ posts }) {
+export function listPage({ posts, page = 1, totalPages = 1 }) {
   const list =
     posts.length === 0
       ? '      <li class="post-card post-card--empty">还没有文章，去 content/posts 里建一篇吧。</li>'
       : posts.map(postCard).join('\n');
 
+  const title = page > 1 ? `第 ${page} 页 · ${SITE.title}` : SITE.title;
+
   const body = `  <header class="site-header">
-    <h1 class="site-title">${escapeHtml(SITE.title)}</h1>
+    <h1 class="site-title"><a href="/">${escapeHtml(SITE.title)}</a></h1>
   </header>
   <main>
     <ul class="post-list">
 ${list}
-    </ul>
+    </ul>${pagination({ page, totalPages })}
   </main>`;
 
-  return shell({ title: SITE.title, body });
+  return shell({ title, body });
 }
 
 // 404 页：必须是根目录的单个 404.html，服务器找不到路径时直接读这个文件

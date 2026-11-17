@@ -14,8 +14,10 @@ function excerpt(body, max = 120) {
 }
 
 // RSS 2.0：订阅器靠它抓文章，博客上线后必备
-export function rssFeed({ posts }) {
+// 只放最近的若干篇：文章多了以后，RSS 里塞全部会变成几百 KB 的大文件
+export function rssFeed({ posts, limit = 20 }) {
   const items = posts
+    .slice(0, limit)
     .map((post) => {
       const link = `${SITE.url}/posts/${post.slug}/`;
       return `    <item>

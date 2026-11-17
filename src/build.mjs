@@ -4,6 +4,7 @@ import MarkdownIt from 'markdown-it'; // markdown → HTML
 import { loadPosts, BlogError } from './posts.mjs'; // 引入解析函数和错误类型
 import { layout, listPage, notFoundPage } from './templates.mjs'; // 页面模板
 import { rssFeed, sitemap } from './feed.mjs'; // RSS 和 sitemap
+import { SITE } from './config.mjs'; // 站点配置
 
 const DIST = 'dist'; // 产物目录
 
@@ -54,8 +55,16 @@ try {
 
   console.log(`✓ 共 ${posts.length} 篇`);
 
-  // 首页
-  console.log(`  ${await write('index.html', listPage({ posts }))}`);
+  // 首页 + 分页：第 1 页是 index.html，第 N 页是 page/N/index.html
+  const perPage = SITE.postsPerPage;
+  const totalPages = Math.max(1, Math.ceil(posts.length / perPage));
+
+  for (let page = 1; page <= totalPages; page++) {
+    const slice = posts.slice((page - 1) * perPage, page * perPage); // 只取这一页的
+    const html = listPage({ posts: slice, page, totalPages });
+    const file = page === 1 ? 'index.html' : path.join('page', String(page), 'index.html');
+    console.log(`  ${await write(file, html)}`);
+  }
 
   // 每篇文章
   for (const post of posts) {
