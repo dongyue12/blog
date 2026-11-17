@@ -271,7 +271,7 @@ export function linksPage({ links }) {
     <ul class="friend-list">
 ${items}
     </ul>
-  </main>`;
+${commentBox()}  </main>`;
 
   return shell({ title: `友链 · ${SITE.title}`, body });
 }
