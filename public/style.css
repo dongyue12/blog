@@ -316,3 +316,38 @@ article img { cursor: zoom-in; }
   user-select: none;
 }
 .lightbox img:active { cursor: grabbing; }
+
+/* 返回顶部：右下角固定，滚动一屏后才出现 */
+.to-top {
+  position: fixed;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  z-index: 10;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: grid;
+  place-items: center;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--muted);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+  /* 隐藏用 opacity + visibility：visibility:hidden 会顺带把它移出 Tab 顺序 */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(0.5rem);
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+}
+.to-top.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+.to-top:hover { color: var(--accent); border-color: var(--accent); }
+.to-top:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .to-top { transition: none; }
+}

@@ -65,6 +65,29 @@ const THEME_BUTTON = `(function () {
   render();
 })();`;
 
+// 返回顶部：滚动超过一屏就出现，右下角固定
+// 用 rAF 节流，避免 scroll 每帧都改 DOM
+const BACK_TO_TOP = `(function () {
+  var btn = document.getElementById('to-top');
+  if (!btn) return;
+  var ticking = false;
+
+  function update() {
+    btn.classList.toggle('is-visible', window.scrollY > 400);
+    ticking = false;
+  }
+  window.addEventListener('scroll', function () {
+    if (!ticking) { ticking = true; requestAnimationFrame(update); }
+  }, { passive: true });   // passive：告诉浏览器我不阻止滚动，滚起来更顺
+  update();
+
+  btn.addEventListener('click', function () {
+    // 系统开了「减少动态效果」就直接跳，不做平滑滚动
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+  });
+})();`;
+
 // 全站导航，改这里就等于改所有页面
 const NAV = [
   { href: '/tags/', label: '标签' },
@@ -87,7 +110,9 @@ function shell({ title, description = SITE.description, body }) {
 </head>
 <body>
 ${body}
+<button id="to-top" class="to-top" type="button" aria-label="返回顶部" title="返回顶部">↑</button>
 <script>${THEME_BUTTON}</script>
+<script>${BACK_TO_TOP}</script>
 </body>
 </html>`;
 }
