@@ -106,17 +106,18 @@ function commentBox() {
         async></script>\n`;
 }
 
-// 图片点击放大 + 滚轮缩放 + 拖动平移
+// 图片点击放大 + 滚轮对准鼠标缩放 + 按住左键拖动平移
 // 用原生 <dialog>，零依赖；只有正文里有 <img> 时才注入
 // 注意：这里不用模板字符串（避免和外层反引号打架），一律用字符串拼接
 function lightbox() {
   return `      <dialog id="lightbox" class="lightbox">
-        <img id="lightbox-img" alt="">
+        <img id="lightbox-img" alt="" draggable="false">
       </dialog>
       <script>
         const box = document.getElementById('lightbox');
         const big = document.getElementById('lightbox-img');
-        let scale = 1, x = 0, y = 0;          // 当前缩放和位移
+        const MIN = 0.5, MAX = 5, STEP = 1.15;
+        let scale = 1, x = 0, y = 0;      // 当前缩放倍率和平移量
         let dragging = false, sx = 0, sy = 0, ox = 0, oy = 0, moved = 0;
 
         function apply() {
@@ -130,22 +131,32 @@ function lightbox() {
             big.src = img.src;
             big.alt = img.alt;
             reset();
-            box.showModal();     // 原生模态：遮罩、锁滚动、Esc 关闭都是自带的
+            box.showModal();   // 原生模态：遮罩、锁滚动、Esc 关闭都是自带的
           });
         }
 
-        // 滚轮缩放：上滚放大、下滚缩小，限制 0.5x ~ 5x
+        // 滚轮缩放：以鼠标所在位置为锚点，那个点始终留在鼠标下面
         box.addEventListener('wheel', (e) => {
-          e.preventDefault();     // 不然整个页面会跟着滚
-          scale = Math.min(5, Math.max(0.5, scale * (e.deltaY < 0 ? 1.15 : 1 / 1.15)));
+          e.preventDefault();  // 不然整个页面跟着滚
+          const rect = big.getBoundingClientRect();
+          const next = Math.min(MAX, Math.max(MIN, scale * (e.deltaY < 0 ? STEP : 1 / STEP)));
+          const k = next / scale;            // 本次实际放大倍数（撞到上下限时会被夹住）
+          // 鼠标相对「图片中心」的位置
+          const mx = e.clientX - (rect.left + rect.width / 2);
+          const my = e.clientY - (rect.top + rect.height / 2);
+          x = x + mx * (1 - k);              // 反向补偿位移，锚点才不会跑
+          y = y + my * (1 - k);
+          scale = next;
           apply();
-        }, { passive: false });   // 要 preventDefault 就不能用默认的 passive
+        }, { passive: false });             // 要 preventDefault 就不能用默认 passive
 
-        // 放大后图片会超出视口，按住拖动平移
+        // 只有按住左键才平移（右键/中键/多点触控都不触发）
         big.addEventListener('pointerdown', (e) => {
+          if (e.button !== 0 || !e.isPrimary) return;
+          e.preventDefault();                // 阻止浏览器开始「拖拽图片」的原生行为
           dragging = true; moved = 0;
           sx = e.clientX; sy = e.clientY; ox = x; oy = y;
-          big.setPointerCapture(e.pointerId);   // 拖到图片外面也不丢
+          big.setPointerCapture(e.pointerId); // 拖出图片范围也不丢事件
         });
         big.addEventListener('pointermove', (e) => {
           if (!dragging) return;
@@ -154,7 +165,11 @@ function lightbox() {
           moved = Math.hypot(e.clientX - sx, e.clientY - sy);
           apply();
         });
-        big.addEventListener('pointerup', () => { dragging = false; });
+        big.addEventListener('pointerup', (e) => {
+          if (e.button !== 0) return;
+          dragging = false;
+        });
+        big.addEventListener('pointercancel', () => { dragging = false; });
 
         // 只有点「遮罩背景」才关闭（拖动过就不算点击）；双击复位
         box.addEventListener('click', (e) => { if (e.target === box && moved < 4) box.close(); });
