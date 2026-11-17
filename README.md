@@ -5,11 +5,23 @@
 ## 常用命令
 
 ```bash
-npm run build    # 构建
+npm run dev      # 预览开发：改文件自动重建 + 浏览器自动刷新 → http://localhost:8000
+npm run build    # 只构建
 npm run size     # 体积预算检查（超预算退出码 1）
-npm run serve    # 本地预览 → http://localhost:8000
-npm run dev      # 构建 + 体积检查 + 起服务
+npm run serve    # 纯静态预览（只服务 dist/，不重建、不注入刷新脚本）
 ```
+
+### 预览怎么选
+
+| 场景 | 命令 | 行为 |
+|---|---|---|
+| 写文章 / 调样式 | `npm run dev` | 改完保存 → 0.08 秒重建 → 浏览器自己刷新 |
+| 看"最终上线长什么样" | `npm run serve` | 不注入任何开发用脚本，等价于线上产物 |
+| 只想构建一次 | `npm run build` | 产物进 `dist/`，用任何静态服务器打开 |
+
+`npm run dev` 的实现：`src/dev.mjs`，只用 Node 内置的 `http` + `fs.watch` + SSE。
+自动刷新脚本只在这个服务器返回的 HTML 里注入，**磁盘上的 `dist/` 始终是干净的线上版本**。
+构建失败时浏览器保持上一版可用，错误直接打在终端里。
 
 ## 日常写作
 
@@ -53,6 +65,7 @@ src/links.mjs             读友链 JSON
 src/minify.mjs            HTML / CSS 压缩（自己写，不引依赖）
 src/image-size.mjs        读图片的宽高，给 <img> 补 width/height 防跳动
 src/build.mjs             入口：串起所有步骤，写 dist/
+src/dev.mjs               预览服务器（自动重建 + 自动刷新）
 src/size.mjs              体积预算检查
 dist/                     构建产物（已在 .gitignore 里）
 ```
