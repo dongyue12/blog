@@ -1,0 +1,17 @@
+{
+  "name": "my-blog",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "build": "node src/build.mjs",
+    "serve": "python3 -m http.server -d dist 8000",
+    "dev": "node src/build.mjs && python3 -m http.server -d dist 8000"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "gray-matter": "^4.0.3",
+    "markdown-it": "^15.0.3"
+  }
+}
