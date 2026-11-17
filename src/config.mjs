@@ -5,7 +5,7 @@ export const SITE = {
   author: 'dy',
   lang: 'zh-CN',
   // 部署后改成你的真实地址（结尾不要带斜杠），RSS / sitemap 里要用绝对链接
-  url: 'https://example.com',
+  url: 'https://dongyue.org',
   postsPerPage: 10, // 首页每页显示几篇，超出的分到 /page/2/ 等
 
   // 评论：Giscus（基于 GitHub Discussions，数据在你自己的仓库里）
