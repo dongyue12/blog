@@ -38,6 +38,16 @@ main {
 h1, h2, h3 { line-height: 1.3; margin: 2.2em 0 0.6em; }
 h1 { font-size: clamp(1.6rem, 1.2rem + 1.6vw, 2.2rem); margin-top: 0; }
 
+/* 辅助页面的标题（标签/搜索/友链）：比文章标题小一档，别喧宾夺主 */
+h1.page-title {
+  font-size: clamp(1.15rem, 1.05rem + 0.5vw, 1.4rem);
+  font-weight: 600;
+  color: var(--muted);
+  margin: 0 0 0.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--line);
+}
+
 .post-date {
   display: block;
   color: var(--muted);
@@ -145,11 +155,28 @@ hr { border: none; border-top: 1px solid var(--line); margin: 2.5em 0; }
   padding: 0.1rem 0.6rem;
   border: 1px solid var(--line);
   border-radius: 999px;
-  font-size: 0.8rem;
+  font-size: 0.75rem; /* 明确小于正文，别让它跟标题抢 */
+  line-height: 1.6;
   color: var(--muted);
   text-decoration: none;
 }
 .tag:hover { color: var(--accent); border-color: var(--accent); }
+
+/* 标签总览：标签云，刻意不套用文章标题的样式 */
+.tag-cloud { list-style: none; display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0; margin: 2rem 0 0; }
+.tag-cloud__item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding: 0.25rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.875rem;
+  text-decoration: none;
+  color: var(--text);
+}
+.tag-cloud__item:hover { border-color: var(--accent); color: var(--accent); }
+.tag-cloud__count { font-size: 0.75rem; color: var(--muted); }
 
 /* 搜索框 */
 .search-input {

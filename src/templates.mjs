@@ -119,17 +119,14 @@ export function tagsPage({ tags }) {
       ? '    <li class="post-card post-card--empty">还没有任何标签。在文章的 frontmatter 里加 tags: [前端] 即可。</li>'
       : tags
           .map(
-            (t) => `      <li class="post-card">
-        <a class="post-card__title" href="/tags/${tagSlug(t.name)}/">${escapeHtml(t.name)}</a>
-        <span class="post-card__date">${t.count} 篇</span>
-      </li>`
+            (t) => `      <li><a class="tag-cloud__item" href="/tags/${tagSlug(t.name)}/">${escapeHtml(t.name)}<span class="tag-cloud__count">${t.count}</span></a></li>`
           )
           .join('\n');
 
   const body = `${siteHeader()}
   <main>
-    <h1>标签</h1>
-    <ul class="post-list">
+    <h1 class="page-title">标签</h1>
+    <ul class="tag-cloud">
 ${items}
     </ul>
   </main>`;
@@ -146,7 +143,7 @@ export function tagPage({ tag, posts }) {
 
   const body = `${siteHeader()}
   <main>
-    <h1>标签：${escapeHtml(tag)}</h1>
+    <h1 class="page-title">标签：${escapeHtml(tag)}</h1>
     <p class="post-date">共 ${posts.length} 篇　<a href="/tags/">← 全部标签</a></p>
     <ul class="post-list">
 ${list}
@@ -160,7 +157,7 @@ ${list}
 export function searchPage() {
   const body = `${siteHeader()}
   <main>
-    <h1>搜索</h1>
+    <h1 class="page-title">搜索</h1>
     <p class="post-date">按标题、标签、摘要过滤，数据来自 /search.json</p>
     <input id="q" class="search-input" type="search" placeholder="输入关键词…" autocomplete="off">
     <p id="count" class="post-date"></p>
@@ -223,7 +220,7 @@ export function linksPage({ links }) {
 
   const body = `${siteHeader()}
   <main>
-    <h1>友链</h1>
+    <h1 class="page-title">友链</h1>
     <ul class="post-list">
 ${items}
     </ul>
