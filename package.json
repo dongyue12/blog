@@ -4,8 +4,9 @@
   "description": "",
   "scripts": {
     "build": "node src/build.mjs",
+    "size": "node src/size.mjs",
     "serve": "python3 -m http.server -d dist 8000",
-    "dev": "node src/build.mjs && python3 -m http.server -d dist 8000"
+    "dev": "node src/build.mjs && node src/size.mjs"
   },
   "keywords": [],
   "author": "",

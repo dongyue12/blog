@@ -1,0 +1,8 @@
+# Cloudflare Pages 读取这个文件；换成别的平台时删掉即可
+/img/*
+  Cache-Control: public, max-age=31536000, immutable
+/*.webp
+  Cache-Control: public, max-age=31536000, immutable
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin

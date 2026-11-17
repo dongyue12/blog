@@ -7,17 +7,32 @@ import { layout, listPage, notFoundPage, tagsPage, tagPage, searchPage, linksPag
 import { rssFeed, sitemap } from './feed.mjs'; // RSS 和 sitemap
 import { excerpt, tagSlug } from './utils.mjs'; // 摘要 + 标签规范化
 import { SITE } from './config.mjs'; // 站点配置
+import { minifyHtml } from './minify.mjs'; // HTML 压缩
+import { collectImageSizes } from './image-size.mjs'; // 图片尺寸（补 width/height 防跳动）
 
 const DIST = 'dist'; // 产物目录
 
 // html:false = md 里写原始 HTML 会被转义（安全默认）
 const md = new MarkdownIt({ html: false, linkify: true });
 
-// 给所有图片加上懒加载，避免首屏外的图一股脑下载
+// 图片尺寸表：渲染规则是同步的，所以尺寸必须提前扫好
+const imageSizes = await collectImageSizes('public');
+
+// 给所有图片加上懒加载 + 明确的宽高，避免加载完成时页面跳动（CLS）
 const defaultImage = md.renderer.rules.image;
 md.renderer.rules.image = (tokens, idx, options, env, self) => {
-  tokens[idx].attrSet('loading', 'lazy'); // 滚到附近才下载
-  tokens[idx].attrSet('decoding', 'async'); // 解码不阻塞渲染
+  const token = tokens[idx];
+  token.attrSet('loading', 'lazy'); // 滚到附近才下载
+  token.attrSet('decoding', 'async'); // 解码不阻塞渲染
+
+  // src 是本站图片才查表；外链图片拿不到尺寸，跳过
+  const src = token.attrGet('src') ?? '';
+  const size = imageSizes.get(src);
+  if (size) {
+    token.attrSet('width', String(size.width)); // 浏览器据此提前留出空间
+    token.attrSet('height', String(size.height));
+  }
+
   return defaultImage(tokens, idx, options, env, self);
 };
 
@@ -35,11 +50,12 @@ function printProblems(problems) {
   }
 }
 
-// 写文件的小工具：自动建父目录
+// 写文件的小工具：自动建父目录；HTML 顺手压缩（其它文件本来就是紧凑格式）
 async function write(relativePath, content) {
   const target = path.join(DIST, relativePath);
   await fs.mkdir(path.dirname(target), { recursive: true });
-  await fs.writeFile(target, content, 'utf8');
+  const isHtml = target.endsWith('.html');
+  await fs.writeFile(target, isHtml ? minifyHtml(content) : content, 'utf8');
   return target;
 }
 

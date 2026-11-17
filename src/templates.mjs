@@ -1,5 +1,11 @@
+import { readFileSync } from 'node:fs'; // 构建期读样式表
 import { escapeHtml, formatDate, tagSlug } from './utils.mjs'; // 转义 + 日期 + 标签规范化
+import { minifyCss } from './minify.mjs'; // 样式压缩
 import { SITE } from './config.mjs'; // 站点信息（含 giscus 评论配置）
+
+// 样式表在构建时读进来、压成一行、直接内联进 <head>
+// 这样首屏少一个请求（省一次 RTT），代价是每页多约 2KB gzip
+const CSS = minifyCss(readFileSync(new URL('./style.css', import.meta.url), 'utf8'));
 
 // 主题脚本：必须放在 <head> 里、样式表之前执行，否则会闪一下白色（FOUC）
 // 三种状态：auto（跟随系统）/ light / dark，存在 localStorage 的 theme 键里
@@ -96,7 +102,7 @@ const NAV = [
 ];
 
 // 页面外壳：每页都一样的 <head> 和骨架，抽出来只写一次
-function shell({ title, description = SITE.description, body }) {
+function shell({ title, description = SITE.description, body, comments = false }) {
   return `<!DOCTYPE html>
 <html lang="${SITE.lang}">
 <head>
@@ -105,7 +111,7 @@ function shell({ title, description = SITE.description, body }) {
   <title>${escapeHtml(title)}</title>
   <meta name="description" content="${escapeHtml(description)}">
   <script>${THEME_INIT}</script>
-  <link rel="stylesheet" href="/style.css">
+${comments ? '  <link rel="preconnect" href="https://giscus.app" crossorigin>\n' : ''}  <style>${CSS}</style>
   <link rel="alternate" type="application/rss+xml" title="${escapeHtml(SITE.title)}" href="/rss.xml">
 </head>
 <body>
@@ -156,7 +162,7 @@ ${tagList}      </div>
     </article>
 ${commentBox()}${html.includes('<img ') ? lightbox() : ''}  </main>`;
 
-  return shell({ title: `${title} · ${SITE.title}`, body });
+  return shell({ title: `${title} · ${SITE.title}`, body, comments: Boolean(SITE.giscus) });
 }
 
 // 评论区：Giscus 走 GitHub Discussions，按 pathname 找对应讨论串
@@ -167,19 +173,7 @@ function commentBox() {
 
   return `      <section class="comments">
         <h2 class="comments__title">评论</h2>
-        <div class="giscus"
-          data-repo="${g.repo}"
-          data-repo-id="${g.repoId}"
-          data-category="${g.category}"
-          data-category-id="${g.categoryId}"
-          data-mapping="${g.mapping}"
-          data-strict="${g.strict}"
-          data-reactions-enabled="${g.reactionsEnabled}"
-          data-emit-metadata="${g.emitMetadata}"
-          data-input-position="${g.inputPosition}"
-          data-theme="preferred_color_scheme"
-          data-lang="${g.lang}"
-          data-loading="${g.loading}"></div>
+        <div class="giscus"></div>
       </section>
       <script src="https://giscus.app/client.js"
         data-repo="${g.repo}"
@@ -436,7 +430,7 @@ ${items}
     </ul>
 ${commentBox()}  </main>`;
 
-  return shell({ title: `友链 · ${SITE.title}`, body });
+  return shell({ title: `友链 · ${SITE.title}`, body, comments: Boolean(SITE.giscus) });
 }
 
 // 404 页：必须是根目录的单个 404.html，服务器找不到路径时直接读这个文件
