@@ -62,7 +62,7 @@ ${tags.map((t) => `          <li><a class="tag" href="/tags/${tagSlug(t)}/">${es
 ${tagList}      </div>
       ${html}
     </article>
-${commentBox()}  </main>`;
+${commentBox()}${html.includes('<img ') ? lightbox() : ''}  </main>`;
 
   return shell({ title: `${title} · ${SITE.title}`, body });
 }
@@ -104,6 +104,26 @@ function commentBox() {
         data-loading="${g.loading}"
         crossorigin="anonymous"
         async></script>\n`;
+}
+
+// 图片点击放大：用原生 <dialog>，零依赖、零构建，就这 15 行
+// 只有正文里真的有 <img> 时才注入，没有图片的文章页一个字节都不多
+function lightbox() {
+  return `      <dialog id="lightbox" class="lightbox">
+        <img id="lightbox-img" alt="">
+      </dialog>
+      <script>
+        const box = document.getElementById('lightbox');
+        const big = document.getElementById('lightbox-img');
+        for (const img of document.querySelectorAll('article img')) {
+          img.addEventListener('click', () => {
+            big.src = img.src; // 用卡片图自己的地址，不改尺寸
+            big.alt = img.alt;
+            box.showModal(); // 原生模态：自动有遮罩、自动锁滚动、Esc 自动关
+          });
+        }
+        box.addEventListener('click', () => box.close()); // 点哪里都关
+      </script>\n`;
 }
 
 // 一张文章卡片：列表页的最小单位，以后改样式只改这里
