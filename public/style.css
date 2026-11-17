@@ -55,6 +55,17 @@ h1.page-title {
   margin-bottom: 2rem;
 }
 
+/* 文章页的元信息行：日期 + 标签排在同一行，窄屏自动换行 */
+.post-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.75rem;
+  margin: 0 0 2rem;
+}
+.post-meta .post-date { margin: 0; }
+.post-meta .tag-list { margin: 0; }
+
 a { color: var(--accent); text-underline-offset: 0.2em; }
 a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 

@@ -48,16 +48,19 @@ export function layout({ title, date, html, tags = [] }) {
   const tagList =
     tags.length === 0
       ? ''
-      : `      <ul class="tag-list">
-${tags.map((t) => `        <li><a class="tag" href="/tags/${tagSlug(t)}/">${escapeHtml(t)}</a></li>`).join('\n')}
-      </ul>\n`;
+      : `        <ul class="tag-list">
+${tags.map((t) => `          <li><a class="tag" href="/tags/${tagSlug(t)}/">${escapeHtml(t)}</a></li>`).join('\n')}
+        </ul>\n`;
 
+  // 日期和标签放在同一行：.post-meta 是一个 flex 行
   const body = `${siteHeader()}
   <main>
     <article>
       <h1>${safeTitle}</h1>
-      <time class="post-date" datetime="${day}">${day}</time>
-${tagList}      ${html}
+      <div class="post-meta">
+        <time class="post-date" datetime="${day}">${day}</time>
+${tagList}      </div>
+      ${html}
     </article>
   </main>`;
 
