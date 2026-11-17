@@ -1,6 +1,70 @@
 import { escapeHtml, formatDate, tagSlug } from './utils.mjs'; // 转义 + 日期 + 标签规范化
 import { SITE } from './config.mjs'; // 站点信息（含 giscus 评论配置）
 
+// 主题脚本：必须放在 <head> 里、样式表之前执行，否则会闪一下白色（FOUC）
+// 三种状态：auto（跟随系统）/ light / dark，存在 localStorage 的 theme 键里
+const THEME_INIT = `(function () {
+  var KEY = 'theme';
+  var root = document.documentElement;
+  var mq = window.matchMedia('(prefers-color-scheme: dark)');
+  function pref() { try { return localStorage.getItem(KEY) || 'auto'; } catch (e) { return 'auto'; } }
+  function resolve(p) { return p === 'auto' ? (mq.matches ? 'dark' : 'light') : p; }
+  window.__theme = {
+    pref: pref,
+    resolve: resolve,
+    set: function (p) {
+      try { p === 'auto' ? localStorage.removeItem(KEY) : localStorage.setItem(KEY, p); } catch (e) {}
+      root.dataset.theme = resolve(p);
+    }
+  };
+  root.dataset.theme = resolve(pref());
+  mq.addEventListener('change', function () { if (pref() === 'auto') root.dataset.theme = resolve('auto'); });
+})();`;
+
+// 按钮逻辑：放在 </body> 前，此时 DOM 已就绪
+const THEME_BUTTON = `(function () {
+  var btn = document.getElementById('theme-toggle');
+  if (!btn) return;
+  var ORDER = ['auto', 'light', 'dark'];
+  var LABEL = { auto: '跟随系统', light: '浅色', dark: '深色' };
+  var ICON = { auto: '\u25d0', light: '\u2600', dark: '\u263e' };
+
+  function render() {
+    var p = window.__theme.pref();
+    btn.textContent = ICON[p];
+    btn.title = '主题：' + LABEL[p] + '，点击切换';
+    btn.setAttribute('aria-label', '主题：' + LABEL[p] + '，点击切换');
+  }
+
+  // 把当前主题推给 giscus 的 iframe（评论框自己不认我们的属性）
+  function syncGiscus() {
+    var f = document.querySelector('iframe.giscus-frame');
+    if (f) {
+      f.contentWindow.postMessage({ giscus: { setConfig: { theme: document.documentElement.dataset.theme } } }, 'https://giscus.app');
+    }
+  }
+
+  btn.addEventListener('click', function () {
+    var next = ORDER[(ORDER.indexOf(window.__theme.pref()) + 1) % ORDER.length];
+    document.documentElement.classList.add('theme-transition'); // 只在切换这几百毫秒内开过渡
+    window.__theme.set(next);
+    render();
+    syncGiscus();
+    clearTimeout(window.__themeTimer);
+    window.__themeTimer = setTimeout(function () {
+      document.documentElement.classList.remove('theme-transition');
+    }, 320);
+  });
+
+  // 用户手动选过主题时，评论框可能已经按系统主题渲染了，短暂轮询纠正
+  if (window.__theme.pref() !== 'auto') {
+    var n = 0;
+    var iv = setInterval(function () { syncGiscus(); if (++n > 20) clearInterval(iv); }, 500);
+  }
+
+  render();
+})();`;
+
 // 全站导航，改这里就等于改所有页面
 const NAV = [
   { href: '/tags/', label: '标签' },
@@ -17,11 +81,13 @@ function shell({ title, description = SITE.description, body }) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${escapeHtml(title)}</title>
   <meta name="description" content="${escapeHtml(description)}">
+  <script>${THEME_INIT}</script>
   <link rel="stylesheet" href="/style.css">
   <link rel="alternate" type="application/rss+xml" title="${escapeHtml(SITE.title)}" href="/rss.xml">
 </head>
 <body>
 ${body}
+<script>${THEME_BUTTON}</script>
 </body>
 </html>`;
 }
@@ -33,6 +99,7 @@ function siteHeader() {
     <a class="site-title" href="/">${escapeHtml(SITE.title)}</a>
     <nav class="site-nav">
       ${links}
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="切换主题">◐</button>
     </nav>
   </header>`;
 }

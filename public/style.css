@@ -122,17 +122,53 @@ hr { border: none; border-top: 1px solid var(--line); margin: 2.5em 0; }
 .post-card__date { color: var(--muted); font-size: 0.85rem; white-space: nowrap; }
 .post-card--empty { color: var(--muted); }
 
-/* 暗色模式：跟随系统设置，不加 JS */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #e6edf3;
-    --bg: #0d1117;
-    --muted: #8b949e;
-    --line: #30363d;
-    --accent: #58a6ff;
-    --code-bg: #161b22;
+/* 主题：默认浅色，[data-theme="dark"] 时覆盖变量
+   auto 状态在 <head> 的内联脚本里就被解析成 light/dark，
+   所以 CSS 里不需要再写 prefers-color-scheme 分支 */
+:root { color-scheme: light; }
+
+[data-theme="dark"] {
+  color-scheme: dark; /* 让原生控件（搜索框、滚动条）也跟着变深 */
+  --text: #e6edf3;
+  --bg: #0d1117;
+  --muted: #8b949e;
+  --line: #30363d;
+  --accent: #58a6ff;
+  --code-bg: #161b22;
+}
+
+/* 主题切换过渡：只在 <html> 上挂 theme-transition 的那 320ms 内生效
+   挂永久 transition 会让页面所有交互都变慢半拍 */
+.theme-transition,
+.theme-transition *,
+.theme-transition *::before,
+.theme-transition *::after {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* 系统里开了「减少动态效果」就关掉过渡 */
+@media (prefers-reduced-motion: reduce) {
+  .theme-transition,
+  .theme-transition *,
+  .theme-transition *::before,
+  .theme-transition *::after {
+    transition: none;
   }
 }
+
+/* 主题切换按钮 */
+.theme-toggle {
+  font: inherit;
+  line-height: 1;
+  padding: 0.25rem 0.45rem;
+  background: none;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.theme-toggle:hover { color: var(--accent); border-color: var(--accent); }
+.theme-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* 分页 */
 .pagination {
