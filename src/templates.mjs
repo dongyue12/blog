@@ -1,5 +1,5 @@
 import { escapeHtml, formatDate, tagSlug } from './utils.mjs'; // 转义 + 日期 + 标签规范化
-import { SITE } from './config.mjs'; // 站点信息
+import { SITE } from './config.mjs'; // 站点信息（含 giscus 评论配置）
 
 // 全站导航，改这里就等于改所有页面
 const NAV = [
@@ -62,9 +62,48 @@ ${tags.map((t) => `          <li><a class="tag" href="/tags/${tagSlug(t)}/">${es
 ${tagList}      </div>
       ${html}
     </article>
-  </main>`;
+${commentBox()}  </main>`;
 
   return shell({ title: `${title} · ${SITE.title}`, body });
+}
+
+// 评论区：Giscus 走 GitHub Discussions，按 pathname 找对应讨论串
+// 它是整站唯一的第三方 JS，且只在文章页、滚动到附近才加载
+function commentBox() {
+  const g = SITE.giscus;
+  if (!g) return ''; // 没配就整块不渲染
+
+  return `      <section class="comments">
+        <h2 class="comments__title">评论</h2>
+        <div class="giscus"
+          data-repo="${g.repo}"
+          data-repo-id="${g.repoId}"
+          data-category="${g.category}"
+          data-category-id="${g.categoryId}"
+          data-mapping="${g.mapping}"
+          data-strict="${g.strict}"
+          data-reactions-enabled="${g.reactionsEnabled}"
+          data-emit-metadata="${g.emitMetadata}"
+          data-input-position="${g.inputPosition}"
+          data-theme="preferred_color_scheme"
+          data-lang="${g.lang}"
+          data-loading="${g.loading}"></div>
+      </section>
+      <script src="https://giscus.app/client.js"
+        data-repo="${g.repo}"
+        data-repo-id="${g.repoId}"
+        data-category="${g.category}"
+        data-category-id="${g.categoryId}"
+        data-mapping="${g.mapping}"
+        data-strict="${g.strict}"
+        data-reactions-enabled="${g.reactionsEnabled}"
+        data-emit-metadata="${g.emitMetadata}"
+        data-input-position="${g.inputPosition}"
+        data-theme="preferred_color_scheme"
+        data-lang="${g.lang}"
+        data-loading="${g.loading}"
+        crossorigin="anonymous"
+        async></script>\n`;
 }
 
 // 一张文章卡片：列表页的最小单位，以后改样式只改这里
@@ -214,9 +253,14 @@ export function linksPage({ links }) {
       ? '      <li class="post-card post-card--empty">还没有友链，编辑 content/links.json 添加。</li>'
       : links
           .map(
-            (l) => `      <li class="post-card">
-        <a class="post-card__title" href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(l.name)}</a>
-        <span class="post-card__date">${escapeHtml(l.desc ?? '')}</span>
+            (l) => `      <li class="friend">
+        <a class="friend__link" href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer">
+          ${l.avatar ? `<img class="friend__avatar" src="${escapeHtml(l.avatar)}" alt="" width="48" height="48" loading="lazy" decoding="async">` : ''}
+          <span class="friend__body">
+            <span class="friend__name">${escapeHtml(l.name)}</span>
+            <span class="friend__desc">${escapeHtml(l.desc ?? '')}</span>
+          </span>
+        </a>
       </li>`
           )
           .join('\n');
@@ -224,7 +268,7 @@ export function linksPage({ links }) {
   const body = `${siteHeader()}
   <main>
     <h1 class="page-title">友链</h1>
-    <ul class="post-list">
+    <ul class="friend-list">
 ${items}
     </ul>
   </main>`;

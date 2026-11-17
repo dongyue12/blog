@@ -202,3 +202,33 @@ hr { border: none; border-top: 1px solid var(--line); margin: 2.5em 0; }
   margin-bottom: 0.5rem;
 }
 .search-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* 友链：桌面两列，窄屏一列 */
+.friend-list {
+  list-style: none;
+  padding: 0;
+  margin: 2rem 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+  gap: 0.75rem;
+}
+.friend__link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--text);
+  height: 100%;
+}
+.friend__link:hover { border-color: var(--accent); }
+.friend__avatar { width: 48px; height: 48px; border-radius: 50%; flex: 0 0 auto; object-fit: cover; }
+.friend__body { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.friend__name { font-weight: 500; }
+.friend__desc { font-size: 0.85rem; color: var(--muted); }
+
+/* 评论区 */
+.comments { margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--line); }
+.comments__title { font-size: 1.1rem; margin: 0 0 1.5rem; color: var(--muted); font-weight: 600; }

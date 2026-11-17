@@ -1,5 +1,38 @@
 [
-  { "name": "MDN Web Docs", "url": "https://developer.mozilla.org/zh-CN/", "desc": "前端最靠谱的文档" },
-  { "name": "Node.js 文档", "url": "https://nodejs.org/docs/latest/api/", "desc": "内置模块手册" },
-  { "name": "MDN: 静态站点生成器", "url": "https://developer.mozilla.org/zh-CN/docs/Glossary/SSG", "desc": "SSG 是什么" }
+  {
+    "name": "冬月的博客",
+    "url": "https://dongyue.org/",
+    "desc": "记录 Windows、开发工具和自建服务上的踩坑与解决办法。",
+    "avatar": "/avatar.webp"
+  },
+  {
+    "name": "清遥",
+    "url": "https://blog.askrabbit.net/",
+    "desc": "遥夜泛清瑟，西风生翠萝。",
+    "avatar": "https://djimg.askrabbit.net/avatar.png"
+  },
+  {
+    "name": "许家大院",
+    "url": "https://blog.hesuisui.top/",
+    "desc": "经常更新一些故事很有趣。",
+    "avatar": "https://blog.hesuisui.top/upload/ok-logo.png"
+  },
+  {
+    "name": "椰汁の小站",
+    "url": "https://home.132614.xyz/",
+    "desc": "一个热爱编程的学生。",
+    "avatar": "https://free.picui.cn/free/2026/03/23/69c12fe83f7a4.jpg"
+  },
+  {
+    "name": "番茄主理人",
+    "url": "https://fqzlr.com/",
+    "desc": "坐而言不如起而行。",
+    "avatar": "https://q1.qlogo.cn/g?b=qq&nk=20447289&s=640"
+  },
+  {
+    "name": "ZSSO",
+    "url": "https://www.zsso.cn/",
+    "desc": "一步一印，自成风景。",
+    "avatar": "https://t.alcy.cc/ycy"
+  }
 ]
