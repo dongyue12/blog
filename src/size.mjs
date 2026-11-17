@@ -6,7 +6,9 @@ import zlib from 'node:zlib';
 
 // 预算：超了就构建失败
 const LIMITS = {
-  pageGzip: 7 * 1024, // 单个 HTML 的 gzip 上限（CSS 已内联，所以比纯 HTML 大）
+  // 单个 HTML 的 gzip 上限。CSS 已内联，所以基准比纯 HTML 高；
+  // 长文章的正文本身会撑大页面，这部分是内容不是开销，上限按"最长文章"留余量。
+  pageGzip: 8 * 1024,
   totalBrotli: 70 * 1024, // 整站（不含图片）brotli 合计上限
   images: 60 * 1024, // 图片合计上限
 };
