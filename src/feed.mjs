@@ -1,17 +1,6 @@
 import { escapeHtml, formatDate } from './utils.mjs'; // 转义 + 日期格式化
+import { excerpt } from './utils.mjs'; // 正文压成纯文本摘要
 import { SITE } from './config.mjs'; // 站点信息
-
-// 把 markdown 正文粗略压成一段纯文本，当 RSS 的摘要用
-function excerpt(body, max = 120) {
-  const text = body
-    .replace(/```[\s\S]*?```/g, ' ') // 去掉代码块
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ') // 去掉图片
-    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1') // 链接只留文字
-    .replace(/[#>*_`~|-]/g, ' ') // 去掉 markdown 记号
-    .replace(/\s+/g, ' ') // 合并空白
-    .trim();
-  return text.length > max ? `${text.slice(0, max)}…` : text;
-}
 
 // RSS 2.0：订阅器靠它抓文章，博客上线后必备
 // 只放最近的若干篇：文章多了以后，RSS 里塞全部会变成几百 KB 的大文件
@@ -45,9 +34,10 @@ ${items}
 }
 
 // sitemap：告诉搜索引擎有哪些页面、最后更新时间
-export function sitemap({ posts }) {
+export function sitemap({ posts, extraPaths = [] }) {
   const urls = [
     `  <url><loc>${escapeHtml(`${SITE.url}/`)}</loc></url>`,
+    ...extraPaths.map((p) => `  <url><loc>${escapeHtml(`${SITE.url}${p}`)}</loc></url>`),
     ...posts.map((post) => {
       const loc = `${SITE.url}/posts/${post.slug}/`;
       return `  <url><loc>${escapeHtml(loc)}</loc><lastmod>${formatDate(post.date)}</lastmod></url>`;

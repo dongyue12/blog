@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises'; // 读目录、读文件的扩展
 import path from 'node:path'; // 拼路径的扩展（跨系统安全）
 import matter from 'gray-matter'; // 读入解析 frontmatter 的扩展
+import { tagSlug } from './utils.mjs'; // 标签 → URL 片段
 
 const NAME_RE = /^(\d{3})\.(.+)\.md$/; // 文件名规格：3位编号.标题.md
 
@@ -68,13 +69,43 @@ export async function loadPosts(postsDir) {
       continue;
     }
 
-    posts.push({ slug, title, date: data.date, body: content, file }); // 组装成一篇
+    // ⑤ tags 可选，但一旦写了必须是数组
+    const rawTags = data.tags ?? [];
+    if (!Array.isArray(rawTags)) {
+      problems.push({
+        file,
+        reason: 'tags 格式不对：写成了一个字符串',
+        hint: '要写成数组形式：tags: [前端, 随笔]，注意方括号和逗号',
+      });
+      continue;
+    }
+
+    const tags = []; // 规范化后的标签（去空格、空格换连字符）
+    let tagError = null;
+    for (const tag of rawTags) {
+      const clean = tagSlug(tag);
+      if (!clean) {
+        tagError = { bad: tag, reason: '标签内容为空或全是禁用字符' };
+        break;
+      }
+      if (!tags.includes(clean)) tags.push(clean); // 同一篇里重复的标签只留一个
+    }
+    if (tagError) {
+      problems.push({
+        file,
+        reason: `标签无法转成 URL：${JSON.stringify(tagError.bad)}（${tagError.reason}）`,
+        hint: '标签里不能用 / \\ : * ? " < > | # % 这些字符',
+      });
+      continue;
+    }
+
+    posts.push({ slug, title, date: data.date, tags, body: content, file }); // 组装成一篇
   }
 
   // 有任何一个问题就不往下走，把整张错误清单交出去
   if (problems.length > 0) throw new BlogError(problems);
 
   // ⑦ 返回数组：顺序 = 文件系统给的顺序，这里不做任何保证
-  //    排序（日期倒序）是调用方 build 的职责，不在这里做
+  //    排序（编号倒序）是调用方 build 的职责，不在这里做
   return posts;
 }

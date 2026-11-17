@@ -2,8 +2,10 @@ import path from 'node:path'; // 拼路径的扩展（相对路径显示更好�
 import fs from 'node:fs/promises'; // 建目录、写文件
 import MarkdownIt from 'markdown-it'; // markdown → HTML
 import { loadPosts, BlogError } from './posts.mjs'; // 引入解析函数和错误类型
-import { layout, listPage, notFoundPage } from './templates.mjs'; // 页面模板
+import { loadLinks } from './links.mjs'; // 读友链数据
+import { layout, listPage, notFoundPage, tagsPage, tagPage, searchPage, linksPage } from './templates.mjs'; // 页面模板
 import { rssFeed, sitemap } from './feed.mjs'; // RSS 和 sitemap
+import { excerpt, tagSlug } from './utils.mjs'; // 摘要 + 标签规范化
 import { SITE } from './config.mjs'; // 站点配置
 
 const DIST = 'dist'; // 产物目录
@@ -43,6 +45,7 @@ async function write(relativePath, content) {
 
 try {
   const posts = await loadPosts('content/posts'); // 读 content/posts 下所有文章
+  const links = await loadLinks('content/links.json'); // 读友链
 
   // 排序规则：编号倒序（编号最大的排最前，老文章沉到最后）
   // 不参与排序的字段：date（只作展示用）
@@ -69,15 +72,49 @@ try {
   // 每篇文章
   for (const post of posts) {
     const html = md.render(post.body); // 正文 → HTML（这段 HTML 不再转义）
-    const page = layout({ title: post.title, date: post.date, html }); // 套模板
+    const page = layout({ title: post.title, date: post.date, html, tags: post.tags }); // 套模板
     const out = await write(path.join('posts', post.slug, 'index.html'), page); // 目录形式 = 干净 URL
     console.log(`  ${post.slug} | ${post.title.slice(0, 24)} | → ${out}`);
   }
 
+  // 标签聚合：先用 Map 攒出「标签 → 文章列表」，再统一渲染
+  const tagMap = new Map();
+  for (const post of posts) {
+    for (const tag of post.tags) {
+      if (!tagMap.has(tag)) tagMap.set(tag, []);
+      tagMap.get(tag).push(post);
+    }
+  }
+  // 标签按文章数从多到少排，一样多时按名字
+  const tagStats = [...tagMap.entries()]
+    .map(([name, list]) => ({ name, count: list.length }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh'));
+
+  console.log(`  ${await write('tags/index.html', tagsPage({ tags: tagStats }))}`);
+
+  for (const [tag, list] of tagMap) {
+    const out = await write(path.join('tags', tagSlug(tag), 'index.html'), tagPage({ tag, posts: list }));
+    console.log(`  标签 ${tag} (${list.length} 篇) → ${out}`);
+  }
+
+  // 搜索索引：只放标题/标签/摘要，正文不进索引（体积可控）
+  const index = posts.map((p) => ({
+    slug: p.slug,
+    title: p.title,
+    tags: p.tags,
+    date: p.date.toISOString().slice(0, 10),
+    excerpt: excerpt(p.body, 100),
+  }));
+  console.log(`  ${await write('search.json', JSON.stringify(index))}`);
+  console.log(`  ${await write('search/index.html', searchPage())}`);
+
+  // 友链
+  console.log(`  ${await write('links/index.html', linksPage({ links }))}`);
+
   // 404 / RSS / sitemap
   console.log(`  ${await write('404.html', notFoundPage({ posts }))}`);
   console.log(`  ${await write('rss.xml', rssFeed({ posts }))}`);
-  console.log(`  ${await write('sitemap.xml', sitemap({ posts }))}`);
+  console.log(`  ${await write('sitemap.xml', sitemap({ posts, extraPaths: ['/tags/', '/links/'] }))}`);
 } catch (err) {
   if (err instanceof BlogError) {
     printProblems(err.problems); // 文章的问题：排成清单，退出码 1

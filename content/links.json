@@ -1,0 +1,5 @@
+[
+  { "name": "MDN Web Docs", "url": "https://developer.mozilla.org/zh-CN/", "desc": "前端最靠谱的文档" },
+  { "name": "Node.js 文档", "url": "https://nodejs.org/docs/latest/api/", "desc": "内置模块手册" },
+  { "name": "MDN: 静态站点生成器", "url": "https://developer.mozilla.org/zh-CN/docs/Glossary/SSG", "desc": "SSG 是什么" }
+]

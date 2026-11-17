@@ -124,3 +124,43 @@ hr { border: none; border-top: 1px solid var(--line); margin: 2.5em 0; }
 .page-link { text-decoration: none; }
 .page-link--off { color: var(--muted); }
 .page-link--num { color: var(--muted); }
+
+/* 站点头部 + 导航 */
+.site-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.site-title { font-size: 1.15rem; font-weight: 600; text-decoration: none; color: var(--text); }
+.site-nav { display: flex; gap: 1rem; font-size: 0.9rem; }
+.site-nav a { color: var(--muted); text-decoration: none; }
+.site-nav a:hover { color: var(--accent); text-decoration: underline; }
+
+/* 标签 chips */
+.tag-list { list-style: none; display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0; margin: 0 0 2rem; }
+.tag {
+  display: inline-block;
+  padding: 0.1rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-decoration: none;
+}
+.tag:hover { color: var(--accent); border-color: var(--accent); }
+
+/* 搜索框 */
+.search-input {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  font-size: 1rem;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+}
+.search-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }

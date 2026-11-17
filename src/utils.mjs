@@ -15,3 +15,24 @@ export function escapeHtml(text) {
 export function formatDate(date) {
   return date.toISOString().slice(0, 10);
 }
+
+// 标签 → 可以直接放进 URL 路径的片段
+// 空格变连字符；禁用文件系统/URL 里的特殊字符；中文原样保留（UTF-8 路径是合法的）
+export function tagSlug(tag) {
+  return String(tag)
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[/\\:*?"<>|#%]/g, '');
+}
+
+// 把 markdown 正文粗略压成一段纯文本（RSS 摘要、搜索摘要共用）
+export function excerpt(body, max = 120) {
+  const text = body
+    .replace(/```[\s\S]*?```/g, ' ') // 去掉代码块
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ') // 去掉图片
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1') // 链接只留文字
+    .replace(/[#>*_`~|-]/g, ' ') // 去掉 markdown 记号
+    .replace(/\s+/g, ' ') // 合并空白
+    .trim();
+  return text.length > max ? `${text.slice(0, max)}…` : text;
+}
