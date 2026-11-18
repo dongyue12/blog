@@ -34,10 +34,12 @@ ${items}
 }
 
 // sitemap：告诉搜索引擎有哪些页面、最后更新时间
-export function sitemap({ posts, extraPaths = [] }) {
+// extraPaths：没有日期的固定页面；docUrls：文档页（也不带日期）
+export function sitemap({ posts, extraPaths = [], docUrls = [] }) {
   const urls = [
     `  <url><loc>${escapeHtml(`${SITE.url}/`)}</loc></url>`,
     ...extraPaths.map((p) => `  <url><loc>${escapeHtml(`${SITE.url}${p}`)}</loc></url>`),
+    ...docUrls.map((p) => `  <url><loc>${escapeHtml(`${SITE.url}${p}`)}</loc></url>`),
     ...posts.map((post) => {
       const loc = `${SITE.url}/posts/${post.slug}/`;
       return `  <url><loc>${escapeHtml(loc)}</loc><lastmod>${formatDate(post.date)}</lastmod></url>`;

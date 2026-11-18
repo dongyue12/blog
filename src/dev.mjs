@@ -109,7 +109,13 @@ const server = http.createServer(async (req, res) => {
 
   // 路径 → 文件：/posts/012/ → dist/posts/012/index.html
   let file = path.join(DIST, decodeURIComponent(url.pathname));
-  if (!path.extname(file)) file = path.join(file, 'index.html');
+  // 用 stat 判断是不是目录，而不是看扩展名：
+  // 文档的文件名里常有小数点（1.css是什么），用扩展名判断会误判成文件
+  try {
+    if ((await fsp.stat(file)).isDirectory()) file = path.join(file, 'index.html');
+  } catch {
+    // 文件不存在：直接交给下面的 sendFile 报 404
+  }
 
   try {
     await sendFile(res, file);

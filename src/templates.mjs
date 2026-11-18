@@ -73,6 +73,8 @@ const THEME_BUTTON = `(function () {
 
 // 返回顶部：滚动超过一屏就出现，右下角固定
 // 用 rAF 节流，避免 scroll 每帧都改 DOM
+// 页面上有右侧目录（文章页 / 宽屏文档页）时，按钮对齐到目录列的右边缘，
+// 而不是贴在窗口角落 —— 自标尺未知（目录栏固定 14rem），用 JS 量一次就行
 const BACK_TO_TOP = `(function () {
   var btn = document.getElementById('to-top');
   if (!btn) return;
@@ -87,6 +89,24 @@ const BACK_TO_TOP = `(function () {
   }, { passive: true });   // passive：告诉浏览器我不阻止滚动，滚起来更顺
   update();
 
+  // 按钮贴在正文的右边一点，而不是窗口角落：
+  // 量正文（文档页 = article，列表页 = main）的右边缘，向右让出一个小间隙
+  // 布局只在窗口大小变化时变 → 不用跟着滚动算
+  // 注意：不能写 'article, main'——选择器列表按文档顺序取第一个，main 在外层会先命中
+  var anchor = document.querySelector('article') || document.querySelector('main');
+  function place() {
+    if (!anchor) return;
+    var rect = anchor.getBoundingClientRect();
+    if (rect.width === 0) { btn.style.right = ''; return; }
+
+    var GAP = 6;                                   // 离正文右边多少
+    var width = btn.offsetWidth || 36;
+    var right = document.documentElement.clientWidth - rect.right - GAP - width;
+    btn.style.right = Math.max(12, Math.round(right)) + 'px';   // 窄屏时不要跑出屏
+  }
+  place();
+  window.addEventListener('resize', place);
+
   btn.addEventListener('click', function () {
     // 系统开了「减少动态效果」就直接跳，不做平滑滚动
     var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -96,13 +116,15 @@ const BACK_TO_TOP = `(function () {
 
 // 全站导航，改这里就等于改所有页面
 const NAV = [
+  { href: '/docs/', label: '文档' },
   { href: '/tags/', label: '标签' },
   { href: '/search/', label: '搜索' },
   { href: '/links/', label: '友链' },
 ];
 
 // 页面外壳：每页都一样的 <head> 和骨架，抽出来只写一次
-function shell({ title, description = SITE.description, body, comments = false }) {
+// bodyClass：个别页面需要改全局布局（比如文章页带右栏目录时，站头也跟着变宽）
+function shell({ title, description = SITE.description, body, comments = false, canonical = '', bodyClass = '' }) {
   return `<!DOCTYPE html>
 <html lang="${SITE.lang}">
 <head>
@@ -110,11 +132,11 @@ function shell({ title, description = SITE.description, body, comments = false }
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${escapeHtml(title)}</title>
   <meta name="description" content="${escapeHtml(description)}">
-  <script>${THEME_INIT}</script>
+${canonical ? `  <link rel="canonical" href="${SITE.url}${canonical}">\n` : ''}  <script>${THEME_INIT}</script>
 ${comments ? '  <link rel="preconnect" href="https://giscus.app" crossorigin>\n' : ''}  <style>${CSS}</style>
   <link rel="alternate" type="application/rss+xml" title="${escapeHtml(SITE.title)}" href="/rss.xml">
 </head>
-<body>
+<body${bodyClass ? ` class="${bodyClass}"` : ''}>
 ${body}
 <button id="to-top" class="to-top" type="button" aria-label="返回顶部" title="返回顶部">↑</button>
 <script>${THEME_BUTTON}</script>
@@ -135,13 +157,34 @@ function siteHeader() {
   </header>`;
 }
 
+// 「本页目录」：文章页和文档页共用一个右栏
+// extraClass 给文档页用来区分窄宽屏（文章页 ≥60rem 就显示，文档页要 ≥78rem）
+function tocList(toc) {
+  return toc
+    .map((h) => `            <li class="toc-item toc-item--h${h.level}"><a href="#${h.id}">${escapeHtml(h.text)}</a></li>`)
+    .join('\n');
+}
+
+function tocAside(toc, extraClass = '') {
+  return `    <aside class="toc-aside${extraClass ? ` ${extraClass}` : ''}">
+      <nav aria-label="本页目录">
+        <p class="toc-aside__title">本页目录</p>
+        <ul>
+${tocList(toc)}
+        </ul>
+      </nav>
+    </aside>`;
+}
+
 // 一篇文章的完整页面
 // 两股数据流，处理方式完全相反：
 //   title / tags  是纯文本 → 必须转义
 //   html          是 markdown 渲染出的 HTML → 绝对不能转义
-export function layout({ title, date, html, tags = [] }) {
+// toc：h2/h3 列表。标题太少就不显示右栏（两三个标题的目录只是干扰）
+export function layout({ title, date, html, tags = [], toc = [] }) {
   const day = formatDate(date);
   const safeTitle = escapeHtml(title);
+  const hasToc = toc.length >= 3;
 
   const tagList =
     tags.length === 0
@@ -151,18 +194,24 @@ ${tags.map((t) => `          <li><a class="tag" href="/tags/${tagSlug(t)}/">${es
         </ul>\n`;
 
   // 日期和标签放在同一行：.post-meta 是一个 flex 行
-  const body = `${siteHeader()}
-  <main>
-    <article>
+  const article = `    <article>
       <h1>${safeTitle}</h1>
       <div class="post-meta">
         <time class="post-date" datetime="${day}">${day}</time>
 ${tagList}      </div>
       ${html}
-    </article>
+    </article>`;
+
+  // 有目录：正文限宽在左，目录吸顶在右；没目录：就是原来那个单列
+  // 评论 / 灯箱也是 main 的直接子元素，用 grid-column 让它们对齐正文而不是拉满全宽
+  const main = hasToc ? `  <main class="post-main">` : `  <main>`;
+
+  const body = `${siteHeader()}
+${main}
+${article}${hasToc ? `\n${tocAside(toc)}` : ''}
 ${commentBox()}${html.includes('<img ') ? lightbox() : ''}  </main>`;
 
-  return shell({ title: `${title} · ${SITE.title}`, body, comments: Boolean(SITE.giscus) });
+  return shell({ title: `${title} · ${SITE.title}`, body, comments: Boolean(SITE.giscus), bodyClass: hasToc ? 'has-toc' : '' });
 }
 
 // 评论区：Giscus 走 GitHub Discussions，按 pathname 找对应讨论串
@@ -352,12 +401,161 @@ ${list}
   return shell({ title: `${tag} · ${SITE.title}`, body });
 }
 
+/* ---------- 文档 ---------- */
+
+// 侧边栏目录：当前分类的整棵树，当前页高亮
+// 文件夹只当小标题用，不单独出页面（分类页已经把内容列全了）
+function docSidebar({ category, currentUrl }) {
+  const render = (nodes) =>
+    nodes
+      .map((node) => {
+        if (node.type === 'dir') {
+          return `          <li class="doc-nav__dir">
+            <span class="doc-nav__label">${escapeHtml(node.title)}</span>
+            <ul>
+${render(node.children)}
+            </ul>
+          </li>`;
+        }
+        const current = node.url === currentUrl ? ' aria-current="page"' : '';
+        return `          <li><a href="${node.url}"${current}>${escapeHtml(node.title)}</a></li>`;
+      })
+      .join('\n');
+
+  return `      <aside class="doc-sidebar">
+        <nav class="doc-nav" aria-label="文档目录">
+          <p class="doc-nav__head">
+            <a href="${category.url}">${escapeHtml(category.title)}</a>
+            <a class="doc-nav__all" href="/docs/">全部</a>
+          </p>
+          <ul>
+${render(category.children)}
+          </ul>
+        </nav>
+      </aside>`;
+}
+
+// 文档总览：所有分类 + 每个分类下的子文件夹
+// 没有分类时给一句提示，别让页面空着
+const DOC_HINT = '把文章放进 content/document 下的文件夹里，一个文件夹就是一个分类。';
+
+export function docsPage({ categories }) {
+  const items =
+    categories.length === 0
+      ? `      <li class="post-card post-card--empty">还没有文档。${DOC_HINT}</li>`
+      : categories
+          .map((cat) => {
+            const sub = cat.children.filter((n) => n.type === 'dir').map((n) => escapeHtml(n.title));
+            return `      <li class="doc-cat">
+        <a class="doc-cat__title" href="${cat.url}">${escapeHtml(cat.title)}<span class="doc-cat__count">${cat.docs.length} 篇</span></a>
+${cat.description ? `        <p class="doc-cat__desc">${escapeHtml(cat.description)}</p>\n` : ''}${sub.length ? `        <p class="doc-cat__sub">${sub.join(' · ')}</p>\n` : ''}      </li>`;
+          })
+          .join('\n');
+
+  const body = `${siteHeader()}
+  <main>
+    <h1 class="page-title">文档</h1>
+    <ul class="doc-cat-list">
+${items}
+    </ul>
+  </main>`;
+
+  return shell({ title: `文档 · ${SITE.title}`, body });
+}
+
+// 分类首页 = 该分类的第一篇：点分类直接开读，少一次点击
+// 想回头看全目录，左侧边栏里就是完整列表
+export function categoryPage({ category, doc, html, toc = [], next = null }) {
+  return docView({
+    category,
+    doc,
+    html,
+    toc,
+    prev: null,
+    next,
+    crumbs: ['<a href="/docs/">文档</a>', `<span aria-current="page">${escapeHtml(category.title)}</span>`],
+    title: `${category.title} · 文档 · ${SITE.title}`,
+    description: category.description || doc.description || SITE.description,
+    canonical: doc.url, // 同一个正文有两个地址，告诉搜索引擎以文章地址为准
+  });
+}
+
+// 上一篇 / 下一篇：文档是按编号顺序读的，这个比日期有用
+function docPager(prev, next) {
+  if (!prev && !next) return '';
+
+  const item = (doc, dir, cls) =>
+    doc
+      ? `<a class="doc-pager__link ${cls}" href="${doc.url}"><span class="doc-pager__dir">${dir}</span>${escapeHtml(doc.title)}</a>`
+      : `<span class="doc-pager__link ${cls} doc-pager__link--off"></span>`;
+
+  return `      <nav class="doc-pager" aria-label="上一篇 / 下一篇">
+        ${item(prev, '← 上一篇', '')}
+        ${item(next, '下一篇 →', 'doc-pager__link--next')}
+      </nav>\n`;
+}
+
+// 一篇文档：左侧目录、右侧正文
+// toc 由 build 从正文标题里抽出来（[{ level, id, text }]），这里只负责画
+export function docPage({ category, doc, html, toc = [], prev = null, next = null }) {
+  const crumbs = [
+    '<a href="/docs/">文档</a>',
+    `<a href="${category.url}">${escapeHtml(category.title)}</a>`,
+    ...doc.crumbs.map((c) => `<span>${escapeHtml(c)}</span>`),
+    `<span aria-current="page">${escapeHtml(doc.title)}</span>`,
+  ].join(' / ');
+
+  return docView({
+    category,
+    doc,
+    html,
+    toc,
+    prev,
+    next,
+    crumbs,
+    title: `${doc.title} · ${category.title} · ${SITE.title}`,
+    description: doc.description || category.description || SITE.description,
+  });
+}
+
+// 文档页和分类首页的唯一区别只有面包屑、标题和上下篇，骨架都在这儿
+function docView({ category, doc, html, toc, prev, next, crumbs, title, description, canonical = '' }) {
+  // 分类首页传进来的面包屑是个数组，这里统一拼成一行
+  const trail = Array.isArray(crumbs) ? crumbs.join(' / ') : crumbs;
+  const hasToc = toc.length > 1;
+
+  // 窄屏（放不下三栏）时，目录折叠在正文顶部；宽屏时挂到右侧（.doc-toc-aside）
+  // 两份用同一份数据渲染，CSS 按宽度只留一份
+  const tocHtml = hasToc
+    ? `        <details class="doc-toc">
+          <summary class="doc-toc__title">本页目录（${toc.length} 节，点击展开）</summary>
+          <ul>
+${tocList(toc)}
+          </ul>
+        </details>\n`
+    : '';
+
+  const body = `${siteHeader()}
+  <main class="doc-main">
+    <nav class="doc-crumbs" aria-label="面包屑">${trail}</nav>
+    <div class="doc-layout">
+${docSidebar({ category, currentUrl: doc.url })}
+      <article class="doc-body">
+        <h1>${escapeHtml(doc.title)}</h1>
+${tocHtml}        ${html}
+${docPager(prev, next)}      </article>
+${hasToc ? `${tocAside(toc, 'doc-toc-aside')}\n` : ''}    </div>
+${html.includes('<img ') ? lightbox() : ''}  </main>`;
+
+  return shell({ title, body, description, canonical });
+}
+
 // 搜索页：唯一必须带 JS 的页面（静态站点没有服务端，只能在浏览器里过滤）
 export function searchPage() {
   const body = `${siteHeader()}
   <main>
     <h1 class="page-title">搜索</h1>
-    <p class="post-date">按标题、标签、摘要过滤，数据来自 /search.json</p>
+    <p class="post-date">按标题、标签、摘要过滤文章和文档，数据来自 /search.json</p>
     <input id="q" class="search-input" type="search" placeholder="输入关键词…" autocomplete="off">
     <p id="count" class="post-date"></p>
     <ul id="results" class="post-list"></ul>
@@ -387,11 +585,11 @@ export function searchPage() {
         li.className = 'post-card';
         const a = document.createElement('a');
         a.className = 'post-card__title';
-        a.href = \`/posts/\${it.slug}/\`;
+        a.href = it.url; // 文章和文档都自带 url，这里不用拼
         a.textContent = it.title; // 用 textContent 而不是 innerHTML：标题里的 < 不会被当成标签
         const span = document.createElement('span');
         span.className = 'post-card__date';
-        span.textContent = it.date;
+        span.textContent = it.date || (it.kind === 'doc' ? '文档' : '');
         li.append(a, span);
         results.append(li);
       }

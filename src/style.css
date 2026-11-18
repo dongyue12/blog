@@ -1,6 +1,7 @@
 /* ============================================================
    简约排版。原则：
    1. 只用字重、字号、行高、间距和一条 1px 分隔线来表达层级
+      （例外：h2~h6 各有一个低饱和的颜色，方便一眼看出标题层级）
    2. 不加阴影、渐变、圆角卡片、动画（主题切换和返回顶部除外）
    3. 所有数值走变量，避免魔法数字
    ============================================================ */
@@ -13,6 +14,22 @@
   --line: #e5e7eb;
   --accent: #2563eb;
   --code-bg: #f6f8fa;
+
+  /* 代码高亮：只留 6 种语义色，够区分就行（跟正文色系一致） */
+  --code-keyword: #cf222e;
+  --code-string: #0a3069;
+  --code-number: #0550ae;
+  --code-comment: #6e7781;
+  --code-function: #8250df;
+  --code-attr: #953800;
+
+  /* 标题层级配色：h2~h6 一档一个低饱和色，靠颜色一眼看出层级 */
+  --h1-color: #1f2328;
+  --h2-color: #0550ae;
+  --h3-color: #8250df;
+  --h4-color: #953800;
+  --h5-color: #0f766e;
+  --h6-color: #6e7781;
 
   /* 排版 */
   --measure: 68ch;        /* 正文最大行宽，中文约 30~35 字/行 */
@@ -47,6 +64,20 @@
   --line: #30363d;
   --accent: #58a6ff;
   --code-bg: #161b22;
+
+  --code-keyword: #ff7b72;
+  --code-string: #a5d6ff;
+  --code-number: #79c0ff;
+  --code-comment: #8b949e;
+  --code-function: #d2a8ff;
+  --code-attr: #ffa657;
+
+  --h1-color: #e6edf3;
+  --h2-color: #79c0ff;
+  --h3-color: #d2a8ff;
+  --h4-color: #ffa657;
+  --h5-color: #56d4c6;
+  --h6-color: #8b949e;
 }
 
 /* 禁用 JS 时 html 上没有 data-theme，退回跟随系统 */
@@ -59,6 +90,20 @@
     --line: #30363d;
     --accent: #58a6ff;
     --code-bg: #161b22;
+
+    --code-keyword: #ff7b72;
+    --code-string: #a5d6ff;
+    --code-number: #79c0ff;
+    --code-comment: #8b949e;
+    --code-function: #d2a8ff;
+    --code-attr: #ffa657;
+
+    --h1-color: #e6edf3;
+    --h2-color: #79c0ff;
+    --h3-color: #d2a8ff;
+    --h4-color: #ffa657;
+    --h5-color: #56d4c6;
+    --h6-color: #8b949e;
   }
 }
 
@@ -132,9 +177,13 @@ h1, h2, h3 {
   text-wrap: balance; /* 标题换行更均衡，纯增强，不影响老浏览器 */
 }
 
-h1 { font-size: var(--size-post-title); margin-top: 0; }
-h2 { font-size: 1.15rem; }
-h3 { font-size: 1rem; }
+/* 字号 + 颜色两重区分：h1 最深，越往下越浅、越靠近辅助色 */
+h1 { font-size: var(--size-post-title); margin-top: 0; color: var(--h1-color); }
+h2 { font-size: 1.15rem; color: var(--h2-color); }
+h3 { font-size: 1rem; color: var(--h3-color); }
+h4 { font-size: 0.95rem; color: var(--h4-color); }
+h5 { font-size: 0.9rem; color: var(--h5-color); }
+h6 { font-size: 0.85rem; color: var(--h6-color); }
 
 p { margin: 0 0 1.1em; text-wrap: pretty; }
 
@@ -219,6 +268,48 @@ pre {
   line-height: 1.6;
 }
 pre code { background: none; padding: 0; font-size: 0.875em; }
+
+/* ---------- 代码语法高亮（highlight.js 的 class，构建时生成） ---------- */
+
+.hljs-comment,
+.hljs-quote { color: var(--code-comment); font-style: italic; }
+
+.hljs-keyword,
+.hljs-literal,
+.hljs-type,
+.hljs-selector-tag,
+.hljs-doctag { color: var(--code-keyword); }
+
+.hljs-string,
+.hljs-regexp,
+.hljs-addition,
+.hljs-attr-value { color: var(--code-string); }
+
+.hljs-number,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-link,
+.hljs-code { color: var(--code-number); }
+
+.hljs-title,
+.hljs-section,
+.hljs-name,
+.hljs-function,
+.hljs-built_in { color: var(--code-function); }
+
+.hljs-attr,
+.hljs-attribute,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-selector-attr,
+.hljs-selector-class,
+.hljs-selector-id,
+.hljs-selector-pseudo,
+.hljs-property { color: var(--code-attr); }
+
+.hljs-emphasis { font-style: italic; }
+.hljs-strong { font-weight: 600; }
+.hljs-deletion { color: var(--code-keyword); }
 
 /* 表格：只留横线，不加边框 */
 table {
@@ -317,6 +408,192 @@ h1.page-title {
 .friend__name { font-weight: 600; }
 .friend__desc { font-size: var(--size-small); color: var(--muted); }
 
+/* ---------- 右侧目录（文章页 / 文档页共用） ---------- */
+
+/* 有目录时正文比平时宽一点点：左栏保持版心宽度，右栏放目录 */
+main.post-main {
+  max-width: calc(var(--measure) + 14rem + var(--space-4));
+  display: grid;
+  grid-template-columns: minmax(0, var(--measure)) 14rem;
+  gap: var(--space-4);
+  align-items: start;
+}
+/* 站头是跟着正文版心走的：这里正文变宽了，站头也跟着变宽，两边才对得齐 */
+body.has-toc .site-header { max-width: calc(var(--measure) + 14rem + var(--space-4)); }
+/* 评论区和灯箱要跟正文左对齐，不能拉满整行 */
+.post-main > .comments { grid-column: 1; }
+
+.toc-aside {
+  position: sticky;
+  top: var(--space-3);
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  padding-left: var(--space-2);
+  border-left: 1px solid var(--line);
+  font-size: var(--size-small);
+}
+.toc-aside__title {
+  margin: 0 0 var(--space-1);
+  color: var(--muted);
+  font-size: var(--size-tiny);
+}
+.toc-aside ul { list-style: none; padding: 0; margin: 0; }
+.toc-aside li { margin: 0.15rem 0; }
+.toc-aside a {
+  display: block;
+  color: var(--muted);
+  text-decoration: none;
+  line-height: 1.5;
+}
+.toc-aside a:hover { color: var(--accent); text-decoration: underline; }
+.toc-item--h3 { padding-left: 0.9rem; }
+
+/* 跳到锚点时给标题留点呼吸空间 */
+article h2, article h3 { scroll-margin-top: var(--space-2); }
+
+/* ---------- 文档 ---------- */
+
+/* 文档页比文章宽：左边多一列目录（宽屏时右边再多一列「本页目录」） */
+main.doc-main { max-width: 76rem; }
+
+/* 文档页的右栏目录默认不显示：窄屏时正文顶部已经有一份折叠的目录了 */
+.doc-toc-aside { display: none; }
+
+.doc-crumbs {
+  font-size: var(--size-small);
+  color: var(--muted);
+  margin-bottom: var(--space-3);
+}
+.doc-crumbs a { color: var(--muted); text-decoration: none; }
+.doc-crumbs a:hover { color: var(--accent); text-decoration: underline; }
+
+.doc-layout {
+  display: grid;
+  grid-template-columns: 16rem minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.doc-sidebar {
+  position: sticky;
+  top: var(--space-3);
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  padding-right: var(--space-2);
+  border-right: 1px solid var(--line);
+  font-size: var(--size-small);
+}
+
+.doc-nav ul { list-style: none; margin: 0.2rem 0 0.4rem; padding-left: 0.85rem; }
+.doc-nav > ul { padding-left: 0; }
+.doc-nav li { margin: 0; }
+.doc-nav a {
+  display: block;
+  padding: 0.12rem 0;
+  color: var(--muted);
+  text-decoration: none;
+  line-height: 1.5;
+}
+.doc-nav a:hover { color: var(--accent); }
+.doc-nav a[aria-current="page"] { color: var(--accent); font-weight: 600; }
+
+.doc-nav__head {
+  margin: 0 0 var(--space-1);
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-1);
+}
+.doc-nav__head a { color: var(--text); }
+.doc-nav__all { font-weight: 400; color: var(--muted) !important; font-size: var(--size-tiny); }
+
+/* 文件夹：只当小标题，不可点 */
+.doc-nav__label {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--text);
+  font-size: var(--size-tiny);
+  letter-spacing: 0.02em;
+}
+
+/* 「本页目录」：用 details 折叠，不靠 JS */
+.doc-toc {
+  margin: 0 0 var(--space-3);
+  padding: var(--space-1) var(--space-2);
+  border-left: 2px solid var(--line);
+  font-size: var(--size-small);
+}
+.doc-toc__title { cursor: pointer; color: var(--muted); }
+.doc-toc ul { list-style: none; padding: 0; margin: var(--space-1) 0 0; }
+.doc-toc li { margin: 0.1rem 0; }
+.doc-toc a { color: var(--muted); text-decoration: none; }
+.doc-toc a:hover { color: var(--accent); text-decoration: underline; }
+
+.doc-body { max-width: var(--measure); }
+
+/* 上一篇 / 下一篇 */
+.doc-pager {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+  font-size: var(--size-small);
+}
+.doc-pager__link {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  max-width: 48%;
+  color: var(--text);
+  text-decoration: none;
+}
+.doc-pager__link:hover { color: var(--accent); }
+.doc-pager__link--next { text-align: right; margin-left: auto; }
+.doc-pager__link--off { visibility: hidden; }
+.doc-pager__dir { color: var(--muted); font-size: var(--size-tiny); }
+
+/* 文档总览：每个分类一块 */
+.doc-cat-list { list-style: none; padding: 0; margin: var(--space-3) 0 0; }
+.doc-cat { padding: var(--space-2) 0; border-bottom: 1px solid var(--line); }
+.doc-cat__title { color: var(--text); text-decoration: none; font-weight: 600; }
+.doc-cat__title:hover { color: var(--accent); text-decoration: underline; }
+.doc-cat__count { color: var(--muted); font-weight: 400; font-size: var(--size-tiny); margin-left: 0.4rem; }
+.doc-cat__desc { margin: 0.2rem 0 0; color: var(--muted); font-size: var(--size-small); }
+.doc-cat__sub { margin: 0.2rem 0 0; color: var(--muted); font-size: var(--size-tiny); }
+
+/* 分类页（现在就是该分类第一篇）不再需要列表样式 */
+
+/* 窄屏：目录放到正文上方或隐藏 */
+/* 够宽（侧栏 + 版心 + 目录都放得下，约 1150px 起）时，文档页变成三栏：
+   左边整类目录 · 中间正文 · 右边本页目录
+   正文顶部那份折叠目录就收起来，避免同一份东西出现两次 */
+@media (min-width: 72rem) {
+  main.doc-main { max-width: calc(16rem + var(--measure) + 14rem + var(--space-4) * 2); }
+  .doc-layout { grid-template-columns: 16rem minmax(0, var(--measure)) 14rem; }
+  .doc-toc-aside { display: block; }
+  .doc-body > .doc-toc { display: none; }
+}
+
+/* 窄屏：目录隐藏/堆到上方，正文回到接近满宽，按钮也回到右边距处 */
+@media (max-width: 60rem) {
+  body.has-toc .site-header { max-width: var(--measure); }
+  main.post-main { grid-template-columns: minmax(0, 1fr); }
+  .toc-aside { display: none; }
+  .doc-layout { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+  .doc-sidebar {
+    position: static;
+    max-height: none;
+    padding: 0 0 var(--space-2);
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+  }
+  .doc-pager { flex-direction: column; }
+  .doc-pager__link { max-width: 100%; }
+  .doc-pager__link--next { text-align: left; }
+}
+
 /* ---------- 搜索 ---------- */
 
 .search-input {
@@ -360,9 +637,10 @@ h1.page-title {
 
 /* ---------- 返回顶部 ---------- */
 
+/* 默认贴窗口右下角；页面上有右侧目录时，脚本会把 right 改成目录列的右边缘 */
 .to-top {
   position: fixed;
-  right: max(1rem, env(safe-area-inset-right));
+  right: max(var(--space-3), env(safe-area-inset-right));
   bottom: max(1rem, env(safe-area-inset-bottom));
   z-index: 10;
   width: 2.25rem;

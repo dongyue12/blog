@@ -57,7 +57,20 @@ export async function loadPosts(postsDir) {
 
     // ③ 读内容 → matter 拆 data / body
     const raw = await fs.readFile(file, 'utf8'); // utf8 别漏，否则拿到 Buffer
-    const { data, content } = matter(raw); // data 是 frontmatter，content 是正文
+
+    // frontmatter 写错（少了逗号、用了 [] 套 [] 之类）时，matter 会直接抛错
+    // 这里拦下来转成一条清单项，否则整个构建会携一堆堆栈退出
+    let data, content;
+    try {
+      ({ data, content } = matter(raw));
+    } catch (err) {
+      problems.push({
+        file,
+        reason: `frontmatter 不是合法 YAML：${err.reason ?? err.message}`,
+        hint: '数组要写成 tags: [前端, md]（逗号分隔，不是 [前端][md]）',
+      });
+      continue;
+    }
 
     // ⑤ date 必填
     if (!data.date) {
